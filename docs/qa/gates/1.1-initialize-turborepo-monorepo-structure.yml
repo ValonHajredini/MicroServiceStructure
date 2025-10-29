@@ -1,0 +1,47 @@
+schema: 1
+story: '1.1'
+story_title: 'Initialize Turborepo Monorepo Structure'
+gate: FAIL
+status_reason: 'Core UI build/test fail: ng build crashes with esbuild deadlock because Sass tooling is missing.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2025-10-29T13:15:52Z'
+top_issues:
+  - severity: high
+    summary: 'Angular workspace cannot build; ng build exits with fatal esbuild deadlock when Sass compiler is absent.'
+    evidence:
+      - 'npx turbo run build --filter=@microservice/core-ui'
+    suggested_owner: dev
+waiver:
+  active: false
+quality_score: 80
+expires: '2025-11-12T13:15:52Z'
+evidence:
+  tests_reviewed: 6
+  risks_identified: 2
+  trace:
+    ac_covered: [1, 2, 3, 4, 6, 7]
+    ac_gaps: [5]
+nfr_validation:
+  security:
+    status: PASS
+    notes: 'Scaffolding only; no sensitive flows implemented yet.'
+  performance:
+    status: PASS
+    notes: 'No runtime functionality implemented.'
+  reliability:
+    status: FAIL
+    notes: '`ng build` crashes (esbuild deadlock) without sass-embedded/sass dependency.'
+  maintainability:
+    status: CONCERNS
+    notes: 'Angular/shared-types lint scripts are placeholders and required tooling is missing.'
+recommendations:
+  immediate:
+    - action: 'Install sass-embedded (or sass) for @microservice/core-ui and rerun npm install/build/test.'
+      refs:
+        - 'apps/core-ui/package.json'
+        - 'npx turbo run build --filter=@microservice/core-ui'
+  future:
+    - action: 'Replace placeholder lint scripts with real checks or document their current behavior.'
+      refs:
+        - 'apps/core-ui/package.json'
+        - 'libs/shared-types/package.json'

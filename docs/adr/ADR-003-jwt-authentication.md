@@ -199,9 +199,53 @@ jwtService.sign(payload, { algorithm: 'RS256', privateKey: fs.readFileSync('jwt.
 jwtService.verify(token, { algorithms: ['RS256'], publicKey: fs.readFileSync('jwt.key.pub') });
 ```
 
+## POC Validation (2025-10-29)
+
+**Status:** ✅ Decision validated through POC implementation
+
+### POC Results
+
+A comprehensive proof-of-concept was implemented to validate this decision (see [POC Documentation](../pocs/jwt-sso-pattern.md)).
+
+**Key Findings:**
+
+1. **HS256 Performance:**
+   - Token generation: 2ms average
+   - Token validation: < 1ms
+   - Successfully demonstrated SSO across auth-service and resource-service
+
+2. **RS256 Evaluation:**
+   - Implementation complexity significantly higher
+   - Key management requires additional infrastructure
+   - Performance impact: ~5-10ms token generation (acceptable but slower)
+
+3. **Decision Confirmation:**
+   - HS256 confirmed as optimal choice for Phase 1
+   - Simple deployment with shared secret via environment variables
+   - Migration path to RS256 remains viable for future phases
+
+**POC Components Built:**
+- `poc/poc-auth-service/` - JWT token generation (HS256/RS256)
+- `poc/poc-resource-service/` - JWT validation middleware
+- `poc/poc-client/` - Angular demo with SSO flow
+
+### Production Readiness
+
+Based on POC findings, this ADR decision is **ready for Story 1.4 implementation** with the following confirmations:
+
+- ✅ Token structure validated
+- ✅ Passport JWT integration verified
+- ✅ Tenant context extraction working
+- ✅ Performance metrics acceptable (2ms generation)
+- ✅ Security considerations documented
+- ✅ Migration path to RS256 preserved
+
+**Recommendation:** Proceed with HS256 implementation in Core Service (Story 1.4).
+
 ## References
 
 - [JWT.io - Introduction to JSON Web Tokens](https://jwt.io/introduction)
 - [NestJS JWT Authentication](https://docs.nestjs.com/security/authentication)
 - [OWASP JWT Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html)
 - [Project Brief](../brief.md) - Authentication & Authorization Flow
+- [POC Documentation](../pocs/jwt-sso-pattern.md) - Validation Results

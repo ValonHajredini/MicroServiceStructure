@@ -1,0 +1,16 @@
+node_modules
+dist
+npm-debug.log
+.env
+.env.local
+.env.*.local
+coverage
+.turbo
+.git
+.gitignore
+README.md
+test
+*.spec.ts
+.eslintrc.json
+.prettierrc
+eslint.config.mjs
