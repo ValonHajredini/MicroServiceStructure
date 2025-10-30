@@ -1,0 +1,101 @@
+<div class="join-organization-container">
+  <div class="join-organization-card">
+    <h1>Join an Organization</h1>
+    <p class="subtitle">Search for your organization and request to join</p>
+
+    <div class="search-section">
+      <div class="search-input-wrapper">
+        <input
+          type="text"
+          [formControl]="searchControl"
+          placeholder="Search for organization name..."
+          class="search-input"
+        />
+        @if (isSearching()) {
+          <span class="search-spinner">Searching...</span>
+        }
+      </div>
+
+      @if (searchError()) {
+        <div class="error-message">{{ searchError() }}</div>
+      }
+
+      @if (searchControl.value && searchControl.value.length < 2) {
+        <p class="help-text">Please enter at least 2 characters</p>
+      }
+    </div>
+
+    <div class="results-section">
+      @if (searchResults().length > 0) {
+        <div class="results-list">
+          @for (tenant of searchResults(); track tenant.id) {
+            <div class="tenant-card">
+              <div class="tenant-info">
+                <h3>{{ tenant.name }}</h3>
+              </div>
+              <button
+                class="btn-request"
+                (click)="openConfirmModal(tenant)"
+              >
+                Request to Join
+              </button>
+            </div>
+          }
+        </div>
+      } @else if (!isSearching() && searchControl.value && searchControl.value.length >= 2) {
+        <div class="empty-state">
+          <p>No organizations found matching your search</p>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Confirmation Modal -->
+  @if (showConfirmModal()) {
+    <div class="modal-overlay" (click)="closeConfirmModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <h2>Request to Join</h2>
+        <p class="modal-tenant-name">{{ selectedTenant()?.name }}</p>
+
+        @if (submitSuccess()) {
+          <div class="success-message">
+            <p>✓ Request sent successfully!</p>
+            <p class="success-subtext">You'll be notified when an admin responds.</p>
+          </div>
+        } @else {
+          <div class="form-group">
+            <label for="joinMessage">Message (optional)</label>
+            <textarea
+              id="joinMessage"
+              [formControl]="joinMessage"
+              placeholder="Explain why you want to join this organization..."
+              rows="4"
+              maxlength="1000"
+            ></textarea>
+          </div>
+
+          @if (submitError()) {
+            <div class="error-message">{{ submitError() }}</div>
+          }
+
+          <div class="modal-actions">
+            <button
+              class="btn-secondary"
+              (click)="closeConfirmModal()"
+              [disabled]="isSubmitting()"
+            >
+              Cancel
+            </button>
+            <button
+              class="btn-primary"
+              (click)="submitJoinRequest()"
+              [disabled]="isSubmitting()"
+            >
+              {{ isSubmitting() ? 'Sending...' : 'Send Request' }}
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

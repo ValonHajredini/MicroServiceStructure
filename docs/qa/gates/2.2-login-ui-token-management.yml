@@ -1,0 +1,136 @@
+# Quality Gate Decision - Story 2.2: Login UI & Token Management
+schema: 1
+story: "2.2"
+story_title: "Login UI & Token Management"
+gate: PASS
+status_reason: "All acceptance criteria met. All 127 tests passing (62 frontend + 65 backend). All previously identified architectural and security issues resolved: JWT storage refactored to AuthService (ARCH-001), user state management implemented (ARCH-002), memory leak prevention added (MEM-001), forgot-password route fixed (ROUTE-001), and rate limiting implemented on login endpoint (SEC-001). Clean separation of concerns, comprehensive test coverage, production-ready implementation."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-10-30T00:45:00Z"
+
+waiver: { active: false }
+
+resolved_issues:
+  - id: "ARCH-001"
+    severity: medium
+    finding: "Separation of concerns violation: Login component directly stored JWT in localStorage"
+    resolution: "JWT storage refactored to AuthService.storeToken() method called from login.ts:61"
+    verified_at: "apps/core-ui/src/app/features/auth/login/login.ts:61"
+    resolved: true
+  - id: "ARCH-002"
+    severity: medium
+    finding: "AuthService currentUserSubject never populated on successful login"
+    resolution: "AuthService.setUser() method created and called from login.ts:62 to populate currentUserSubject"
+    verified_at: "apps/core-ui/src/app/features/auth/login/login.ts:62, apps/core-ui/src/app/core/services/auth.service.ts:38-40"
+    resolved: true
+  - id: "MEM-001"
+    severity: medium
+    finding: "Login component didn't unsubscribe from login observable"
+    resolution: "Added takeUntilDestroyed(this.destroyRef) pipe at login.ts:57 with DestroyRef injection"
+    verified_at: "apps/core-ui/src/app/features/auth/login/login.ts:57"
+    resolved: true
+  - id: "ROUTE-001"
+    severity: medium
+    finding: "Forgot-password route incorrectly loaded Login component"
+    resolution: "Route configured with redirectTo: '/login' at app.routes.ts:22 with comment explaining deferred to Story 2.5"
+    verified_at: "apps/core-ui/src/app/app.routes.ts:20-24"
+    resolved: true
+  - id: "SEC-001"
+    severity: high
+    finding: "No rate limiting implemented on login endpoint"
+    resolution: "Rate limiting implemented using @nestjs/throttler: 5 requests per 15 minutes on login endpoint"
+    verified_at: "apps/core-api/src/auth/auth.controller.ts:51"
+    resolved: true
+
+# Quality Score: 100/100 (All issues resolved, comprehensive test coverage, production-ready)
+quality_score: 100
+expires: "2025-11-30T00:00:00Z"
+
+evidence:
+  tests_reviewed: 127
+  tests_passing: 127
+  tests_failing: 0
+  critical_fixes_applied: 5
+  risks_identified: 0
+  trace:
+    ac_covered: [1, 2, 3, 4, 5, 6, 7]
+    ac_gaps: []
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: "Rate limiting implemented (5 req/15min). JWT storage follows established pattern. Generic error messages prevent credential enumeration. Token expiration deferred to future sprint per architecture decision. HTTPS required for production (documented)."
+  performance:
+    status: PASS
+    notes: "Lazy-loaded component (6.94 kB gzipped). Minimal bundle impact. Efficient reactive forms. Lightweight HTTP interceptor with token injection only when needed."
+  reliability:
+    status: PASS
+    notes: "Comprehensive error handling (401/500/network). All 127 tests passing. Proper form validation with user feedback. Memory leak prevention implemented."
+  maintainability:
+    status: PASS
+    notes: "Clean separation of concerns achieved. JWT storage in AuthService. User state management properly implemented. Modern Angular patterns (standalone components, functional interceptors). Well-documented with inline comments for architectural decisions."
+
+recommendations:
+  future:
+    - action: "Implement token refresh mechanism"
+      refs: ["apps/core-ui/src/app/core/services/auth.service.ts"]
+      priority: medium
+      notes: "Deferred to future sprint per Dev Notes. JWT expires after 24 hours - user must re-login for MVP."
+    - action: "Implement global 401 interceptor for automatic token expiration handling"
+      refs: ["apps/core-ui/src/app/core/interceptors/"]
+      priority: medium
+      notes: "Future enhancement for improved UX when tokens expire"
+    - action: "Consider per-email-address rate limiting in addition to per-IP"
+      refs: ["apps/core-api/src/auth/auth.controller.ts:20"]
+      priority: low
+      notes: "Current per-IP rate limiting is sufficient for MVP. Per-email limiting would add defense against distributed attacks."
+    - action: "Evaluate httpOnly cookies vs localStorage for enhanced XSS protection"
+      refs: ["apps/core-ui/src/app/core/services/auth.service.ts:34-36"]
+      priority: low
+      notes: "Consistent with Story 2.1. localStorage acceptable for MVP. httpOnly cookies provide better XSS protection but require CORS configuration changes."
+
+verification_checklist:
+  - item: "JWT storage delegated to AuthService"
+    status: verified
+    location: "apps/core-ui/src/app/features/auth/login/login.ts:61"
+  - item: "User state management implemented"
+    status: verified
+    location: "apps/core-ui/src/app/features/auth/login/login.ts:62"
+  - item: "Memory leak prevention with takeUntilDestroyed"
+    status: verified
+    location: "apps/core-ui/src/app/features/auth/login/login.ts:57"
+  - item: "Forgot-password route properly configured"
+    status: verified
+    location: "apps/core-ui/src/app/app.routes.ts:20-24"
+  - item: "Rate limiting on login endpoint"
+    status: verified
+    location: "apps/core-api/src/auth/auth.controller.ts:51"
+  - item: "All 127 tests passing"
+    status: verified
+    location: "Test suite execution results"
+  - item: "HTTP interceptor adds Authorization header"
+    status: verified
+    location: "apps/core-ui/src/app/core/interceptors/auth-interceptor.ts"
+  - item: "Form validation working correctly"
+    status: verified
+    location: "apps/core-ui/src/app/features/auth/login/login.ts:30-33"
+  - item: "Error handling for 401/500/network errors"
+    status: verified
+    location: "apps/core-ui/src/app/features/auth/login/login.ts:65-76"
+  - item: "Navigation to /dashboard on success"
+    status: verified
+    location: "apps/core-ui/src/app/features/auth/login/login.ts:63"
+
+compliance:
+  coding_standards: "PASS - Modern Angular patterns, clean code structure"
+  project_structure: "PASS - Proper feature module organization in features/auth/login/"
+  testing_strategy: "PASS - Comprehensive unit test coverage (127 tests)"
+  all_acs_met: "PASS - All 7 acceptance criteria functionally implemented and tested"
+  architecture_alignment: "PASS - Follows established authentication patterns from Story 2.1"
+
+history:
+  - at: "2025-10-30T00:00:00Z"
+    gate: CONCERNS
+    note: "Initial comprehensive review. Fixed 2 critical test failures (TypeScript compilation + test configuration). All 38 tests passing. Identified 4 medium-priority architectural improvements and 1 high-priority security concern (rate limiting). Recommended addressing before production."
+  - at: "2025-10-30T00:45:00Z"
+    gate: PASS
+    note: "Follow-up review after QA-identified issues resolved. All 5 issues (ARCH-001, ARCH-002, MEM-001, ROUTE-001, SEC-001) successfully addressed. Test suite expanded to 127 tests (62 frontend + 65 backend), all passing. Clean separation of concerns achieved. Rate limiting implemented. Production-ready."

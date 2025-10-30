@@ -1,0 +1,105 @@
+<div class="join-requests-container">
+  <div class="join-requests-card">
+    <div class="header">
+      <h1>Join Requests</h1>
+      <button class="btn-refresh" (click)="loadJoinRequests()" [disabled]="isLoading()">
+        {{ isLoading() ? 'Loading...' : 'Refresh' }}
+      </button>
+    </div>
+
+    @if (error()) {
+      <div class="error-message">{{ error() }}</div>
+    }
+
+    @if (isLoading()) {
+      <div class="loading-state">
+        <p>Loading join requests...</p>
+      </div>
+    } @else if (joinRequests().length === 0) {
+      <div class="empty-state">
+        <p>No pending join requests</p>
+      </div>
+    } @else {
+      <div class="requests-list">
+        @for (request of joinRequests(); track request.id) {
+          <div class="request-card">
+            <div class="request-header">
+              <div class="user-info">
+                <h3>{{ request.user.firstName }} {{ request.user.lastName }}</h3>
+                <p class="email">{{ request.user.email }}</p>
+              </div>
+              <span class="status-badge">{{ request.status }}</span>
+            </div>
+
+            @if (request.message) {
+              <div class="request-message">
+                <p class="message-label">Message:</p>
+                <p class="message-text">{{ request.message }}</p>
+              </div>
+            }
+
+            <div class="request-footer">
+              <span class="request-date">{{ formatDate(request.createdAt) }}</span>
+              <div class="request-actions">
+                <button
+                  class="btn-reject"
+                  (click)="openRejectModal(request)"
+                  [disabled]="isProcessing()"
+                >
+                  Reject
+                </button>
+                <button
+                  class="btn-approve"
+                  (click)="approveRequest(request)"
+                  [disabled]="isProcessing()"
+                >
+                  Approve
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Reject Modal -->
+  @if (showRejectModal()) {
+    <div class="modal-overlay" (click)="closeRejectModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <h2>Reject Join Request</h2>
+        <p class="modal-user-name">
+          {{ selectedRequest()?.user.firstName }} {{ selectedRequest()?.user.lastName }}
+        </p>
+
+        <div class="form-group">
+          <label for="rejectMessage">Response Message (optional)</label>
+          <textarea
+            id="rejectMessage"
+            [formControl]="rejectMessage"
+            placeholder="Provide a reason for rejection..."
+            rows="4"
+            maxlength="1000"
+          ></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button
+            class="btn-secondary"
+            (click)="closeRejectModal()"
+            [disabled]="isProcessing()"
+          >
+            Cancel
+          </button>
+          <button
+            class="btn-danger"
+            (click)="submitReject()"
+            [disabled]="isProcessing()"
+          >
+            {{ isProcessing() ? 'Rejecting...' : 'Reject Request' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

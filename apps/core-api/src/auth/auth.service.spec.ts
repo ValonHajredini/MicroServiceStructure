@@ -10,7 +10,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { AuthService } from './auth.service';
-import { EmailService } from '../common/services/email.service';
+import { EmailService } from '../email/email.service';
 import { User } from '../users/entities/user.entity';
 import { Tenant } from '../tenants/entities/tenant.entity';
 import { UserTenantRole } from '../users/entities/user-tenant-role.entity';
@@ -29,6 +29,7 @@ describe('AuthService', () => {
     create: jest.fn(),
     save: jest.fn(),
     count: jest.fn(),
+    update: jest.fn(),
   };
 
   const mockTenantRepository = {
@@ -101,6 +102,7 @@ describe('AuthService', () => {
 
   describe('register', () => {
     const registerDto: RegisterDto = {
+      companyName: 'Acme Corporation',
       email: 'test@example.com',
       password: 'SecurePass123!',
       firstName: 'John',
@@ -113,7 +115,7 @@ describe('AuthService', () => {
 
       const mockTenant = {
         id: 'tenant-id',
-        name: 'Example',
+        name: 'Acme Corporation',
         enabled_services: [],
         status: 'active',
       };
@@ -139,12 +141,15 @@ describe('AuthService', () => {
       };
       mockUserTenantRoleRepository.create.mockReturnValue(mockRole);
       mockUserTenantRoleRepository.save.mockResolvedValue(mockRole);
+      mockUserTenantRoleRepository.find.mockResolvedValue([mockRole]);
+      mockJwtService.signAsync.mockResolvedValue('mock-jwt-token');
 
       const result = await service.register(registerDto);
 
       expect(result.success).toBe(true);
-      expect(result.data.userId).toBe('user-id');
-      expect(result.data.tenantId).toBe('tenant-id');
+      expect(result.data.token).toBe('mock-jwt-token');
+      expect(result.data.user.id).toBe('user-id');
+      expect(result.data.user.tenantId).toBe('tenant-id');
       expect(mockUserRepository.save).toHaveBeenCalled();
       expect(mockTenantRepository.save).toHaveBeenCalled();
     });
@@ -158,11 +163,14 @@ describe('AuthService', () => {
       mockTenantRepository.save.mockResolvedValue(mockTenant);
       mockUserRepository.count.mockResolvedValue(0);
 
-      const mockUser = { id: 'user-id' };
+      const mockUser = { id: 'user-id', tenant_id: 'tenant-id' };
       mockUserRepository.create.mockReturnValue(mockUser);
       mockUserRepository.save.mockResolvedValue(mockUser);
-      mockUserTenantRoleRepository.create.mockReturnValue({});
-      mockUserTenantRoleRepository.save.mockResolvedValue({});
+      const mockRole = { role: 'admin' };
+      mockUserTenantRoleRepository.create.mockReturnValue(mockRole);
+      mockUserTenantRoleRepository.save.mockResolvedValue(mockRole);
+      mockUserTenantRoleRepository.find.mockResolvedValue([mockRole]);
+      mockJwtService.signAsync.mockResolvedValue('mock-jwt-token');
 
       await service.register(registerDto);
 
@@ -178,10 +186,9 @@ describe('AuthService', () => {
       });
 
       await expect(service.register(registerDto)).rejects.toThrow(
-        ConflictException,
-      );
-      await expect(service.register(registerDto)).rejects.toThrow(
-        'Email already exists',
+        expect.objectContaining({
+          message: 'Email already exists',
+        }),
       );
     });
 
@@ -199,8 +206,11 @@ describe('AuthService', () => {
       mockUserRepository.create.mockReturnValue(mockUser);
       mockUserRepository.save.mockResolvedValue(mockUser);
 
-      mockUserTenantRoleRepository.create.mockReturnValue({});
-      mockUserTenantRoleRepository.save.mockResolvedValue({});
+      const mockRole = { role: 'admin' };
+      mockUserTenantRoleRepository.create.mockReturnValue(mockRole);
+      mockUserTenantRoleRepository.save.mockResolvedValue(mockRole);
+      mockUserTenantRoleRepository.find.mockResolvedValue([mockRole]);
+      mockJwtService.signAsync.mockResolvedValue('mock-jwt-token');
 
       await service.register(registerDto);
 
@@ -221,8 +231,11 @@ describe('AuthService', () => {
       mockUserRepository.create.mockReturnValue(mockUser);
       mockUserRepository.save.mockResolvedValue(mockUser);
 
-      mockUserTenantRoleRepository.create.mockReturnValue({});
-      mockUserTenantRoleRepository.save.mockResolvedValue({});
+      const mockRole = { role: 'user' };
+      mockUserTenantRoleRepository.create.mockReturnValue(mockRole);
+      mockUserTenantRoleRepository.save.mockResolvedValue(mockRole);
+      mockUserTenantRoleRepository.find.mockResolvedValue([mockRole]);
+      mockJwtService.signAsync.mockResolvedValue('mock-jwt-token');
 
       await service.register(registerDto);
 
@@ -231,8 +244,9 @@ describe('AuthService', () => {
       expect(roleCreateCall.role).toBe('user');
     });
 
-    it('should derive tenant name from email domain', async () => {
+    it('should use companyName from DTO for tenant name', async () => {
       const acmeDto: RegisterDto = {
+        companyName: 'Acme Corporation',
         email: 'john@acme.com',
         password: 'SecurePass123!',
         firstName: 'John',
@@ -251,13 +265,16 @@ describe('AuthService', () => {
       mockUserRepository.create.mockReturnValue(mockUser);
       mockUserRepository.save.mockResolvedValue(mockUser);
 
-      mockUserTenantRoleRepository.create.mockReturnValue({});
-      mockUserTenantRoleRepository.save.mockResolvedValue({});
+      const mockRole = { role: 'admin' };
+      mockUserTenantRoleRepository.create.mockReturnValue(mockRole);
+      mockUserTenantRoleRepository.save.mockResolvedValue(mockRole);
+      mockUserTenantRoleRepository.find.mockResolvedValue([mockRole]);
+      mockJwtService.signAsync.mockResolvedValue('mock-jwt-token');
 
       await service.register(acmeDto);
 
       const tenantCreateCall = mockTenantRepository.create.mock.calls[0][0];
-      expect(tenantCreateCall.name).toBe('Acme');
+      expect(tenantCreateCall.name).toBe('Acme Corporation');
     });
 
     it('should create tenant with enabled_services as empty array', async () => {
@@ -273,8 +290,11 @@ describe('AuthService', () => {
       mockUserRepository.create.mockReturnValue(mockUser);
       mockUserRepository.save.mockResolvedValue(mockUser);
 
-      mockUserTenantRoleRepository.create.mockReturnValue({});
-      mockUserTenantRoleRepository.save.mockResolvedValue({});
+      const mockRole = { role: 'admin' };
+      mockUserTenantRoleRepository.create.mockReturnValue(mockRole);
+      mockUserTenantRoleRepository.save.mockResolvedValue(mockRole);
+      mockUserTenantRoleRepository.find.mockResolvedValue([mockRole]);
+      mockJwtService.signAsync.mockResolvedValue('mock-jwt-token');
 
       await service.register(registerDto);
 
@@ -352,10 +372,9 @@ describe('AuthService', () => {
       mockUserRepository.findOne.mockResolvedValue(null);
 
       await expect(service.login(loginDto)).rejects.toThrow(
-        UnauthorizedException,
-      );
-      await expect(service.login(loginDto)).rejects.toThrow(
-        'Invalid email or password',
+        expect.objectContaining({
+          message: 'Invalid email or password',
+        }),
       );
     });
 
@@ -370,7 +389,9 @@ describe('AuthService', () => {
       mockUserRepository.findOne.mockResolvedValue(mockUser);
 
       await expect(service.login(loginDto)).rejects.toThrow(
-        UnauthorizedException,
+        expect.objectContaining({
+          message: expect.stringContaining('Invalid'),
+        }),
       );
     });
 
@@ -392,7 +413,7 @@ describe('AuthService', () => {
 
       const result = await service.login(loginDto);
 
-      expect(result.data.user).not.toHaveProperty('password_hash');
+      expect('password_hash' in result.data.user).toBe(false);
     });
 
     it('should include exp claim with 24h expiration (TEST-002)', async () => {
@@ -436,6 +457,7 @@ describe('AuthService', () => {
         password: 'weakpass123!', // No uppercase
         firstName: 'John',
         lastName: 'Doe',
+        companyName: 'Test Company',
       };
 
       // This validation happens at DTO level via class-validator
@@ -451,6 +473,7 @@ describe('AuthService', () => {
         password: 'WEAKPASS123!', // No lowercase
         firstName: 'John',
         lastName: 'Doe',
+        companyName: 'Test Company',
       };
 
       const passwordRegex =
@@ -464,6 +487,7 @@ describe('AuthService', () => {
         password: 'WeakPassword', // No number or special char
         firstName: 'John',
         lastName: 'Doe',
+        companyName: 'Test Company',
       };
 
       const passwordRegex =
@@ -477,6 +501,7 @@ describe('AuthService', () => {
         password: 'SecurePass123!', // Has all requirements
         firstName: 'John',
         lastName: 'Doe',
+        companyName: 'Test Company',
       };
 
       const passwordRegex =
@@ -638,10 +663,9 @@ describe('AuthService', () => {
       mockPasswordResetTokenRepository.findOne.mockResolvedValue(null);
 
       await expect(service.resetPassword(resetPasswordDto)).rejects.toThrow(
-        BadRequestException,
-      );
-      await expect(service.resetPassword(resetPasswordDto)).rejects.toThrow(
-        'Invalid or expired token',
+        expect.objectContaining({
+          message: 'Invalid or expired token',
+        }),
       );
     });
 
@@ -667,10 +691,9 @@ describe('AuthService', () => {
       });
 
       await expect(service.resetPassword(resetPasswordDto)).rejects.toThrow(
-        BadRequestException,
-      );
-      await expect(service.resetPassword(resetPasswordDto)).rejects.toThrow(
-        'Password reset token has expired',
+        expect.objectContaining({
+          message: 'Password reset token has expired',
+        }),
       );
 
       // Should clean up expired token

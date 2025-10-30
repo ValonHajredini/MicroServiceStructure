@@ -1,0 +1,34 @@
+<p-dialog
+  [visible]="visible()"
+  [header]="'Request Service Access'"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '450px' }"
+  (onHide)="close()">
+  <div class="modal-content">
+    <div class="icon-wrapper">
+      <i class="pi pi-lock" style="font-size: 3rem; color: var(--primary-color)"></i>
+    </div>
+
+    <h3 class="service-title">{{ serviceLabel() }}</h3>
+
+    <p class="message">
+      <strong>{{ serviceLabel() }}</strong> is not currently enabled for your organization.
+    </p>
+
+    <p class="instruction">
+      Contact your administrator to enable this service and gain access.
+    </p>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Close"
+      icon="pi pi-times"
+      (onClick)="close()"
+      styleClass="p-button-text">
+    </p-button>
+  </ng-template>
+</p-dialog>

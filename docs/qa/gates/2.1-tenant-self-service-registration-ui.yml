@@ -1,0 +1,61 @@
+# Quality Gate Decision - Story 2.1: Tenant Self-Service Registration UI
+schema: 1
+story: "2.1"
+story_title: "Tenant Self-Service Registration UI"
+gate: PASS
+status_reason: "All acceptance criteria fully met. Previous FAIL blockers resolved. All 95 tests passing (30 frontend + 65 backend). Registration flow functional end-to-end."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-10-30T00:00:00Z"
+
+waiver: { active: false }
+
+top_issues: []
+
+# Quality Score: 100/100 (no fails, no concerns)
+quality_score: 100
+
+evidence:
+  tests_reviewed: 95
+  frontend_tests: 30
+  backend_tests: 65
+  risks_identified: 0
+  trace:
+    ac_covered: [1, 2, 3, 4, 5, 6, 7]
+    ac_gaps: []
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: "Rate limiting implemented, password hashing with bcrypt, generic error messages prevent enumeration"
+  performance:
+    status: PASS
+    notes: "Lazy-loaded components, reactive forms, minimal bundle impact"
+  reliability:
+    status: PASS
+    notes: "Comprehensive error handling, all tests passing, contract alignment verified"
+  maintainability:
+    status: PASS
+    notes: "Clean code structure, proper separation of concerns, type safety, comprehensive test coverage"
+
+recommendations:
+  immediate: []
+  future:
+    - action: "Standardize token field naming between register and login endpoints for consistency"
+      refs: ["apps/core-api/src/auth/auth.service.ts:125", "apps/core-api/src/auth/auth.service.ts:200"]
+      priority: low
+      notes: "Register returns 'token', login returns 'access_token'. Both should use same field name."
+    - action: "Consider implementing e2e tests for full registration flow"
+      refs: ["apps/core-ui/src/app/features/auth/register/"]
+      priority: low
+    - action: "Evaluate httpOnly cookies vs localStorage for JWT storage in future security review"
+      refs: ["apps/core-ui/src/app/features/auth/register/register.component.ts:107"]
+      priority: low
+      notes: "Current localStorage approach is acceptable for MVP but consider httpOnly cookies for enhanced XSS protection"
+
+history:
+  - at: "2025-10-29T00:00:00Z"
+    gate: FAIL
+    note: "Initial review - critical contract mismatches: backend missing companyName field, not returning JWT token, tests not running"
+  - at: "2025-10-30T00:00:00Z"
+    gate: PASS
+    note: "All blockers resolved. QA fixes applied: JWT token return added, companyName field implemented, rate limiting added, password validation aligned. Additional QA improvements: fixed test import paths (30 tests now running), added dashboard route, test assertions corrected."

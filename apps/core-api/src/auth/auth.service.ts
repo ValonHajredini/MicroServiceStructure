@@ -13,11 +13,13 @@ import { User } from '../users/entities/user.entity';
 import { Tenant } from '../tenants/entities/tenant.entity';
 import { UserTenantRole } from '../users/entities/user-tenant-role.entity';
 import { PasswordResetToken } from './entities/password-reset-token.entity';
-import { EmailService } from '../common/services/email.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { AcceptInvitationDto } from '../invitations/dto/accept-invitation.dto';
+import { Invitation } from '../invitations/entities/invitation.entity';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class AuthService {
@@ -35,7 +37,7 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    const { email, password, firstName, lastName } = registerDto;
+    const { companyName, email, password, firstName, lastName } = registerDto;
 
     // Check for duplicate email across all tenants
     const existingUser = await this.userRepository.findOne({
@@ -50,19 +52,14 @@ export class AuthService {
     const password_hash = await this.hashPassword(password);
 
     // Create or find tenant for this user
-    // For first user, create new tenant
-    // Extract organization name from email domain
-    const emailDomain = email.split('@')[1].split('.')[0];
-    const tenantName =
-      emailDomain.charAt(0).toUpperCase() + emailDomain.slice(1);
-
+    // For first user, create new tenant using provided company name
     let tenant = await this.tenantRepository.findOne({
-      where: { name: tenantName },
+      where: { name: companyName },
     });
 
     if (!tenant) {
       tenant = this.tenantRepository.create({
-        name: tenantName,
+        name: companyName,
         enabled_services: [],
         status: 'active',
       });
@@ -97,13 +94,45 @@ export class AuthService {
 
     await this.userTenantRoleRepository.save(userTenantRole);
 
-    // Return success response (no sensitive data)
+    // Get user roles
+    const userRoles = await this.userTenantRoleRepository.find({
+      where: {
+        user_id: savedUser.id,
+        tenant_id: tenant.id,
+      },
+    });
+
+    const roles = userRoles.map((ur) => ur.role);
+
+    // Generate JWT token
+    const now = Math.floor(Date.now() / 1000);
+    const expiresIn = 86400; // 24 hours in seconds
+
+    const payload = {
+      sub: savedUser.id,
+      email: savedUser.email,
+      tenantId: savedUser.tenant_id,
+      roles,
+      enabledServices: tenant.enabled_services,
+      iat: now,
+      exp: now + expiresIn,
+    };
+
+    const access_token = await this.jwtService.signAsync(payload);
+
+    // Return success response with JWT token and user data
     return {
       success: true,
       data: {
-        userId: savedUser.id,
-        tenantId: tenant.id,
-        message: 'Registration successful',
+        token: access_token,
+        user: {
+          id: savedUser.id,
+          email: savedUser.email,
+          firstName: savedUser.first_name,
+          lastName: savedUser.last_name,
+          tenantId: savedUser.tenant_id,
+          roles,
+        },
       },
       meta: {
         timestamp: new Date().toISOString(),
@@ -232,7 +261,7 @@ export class AuthService {
 
     await this.passwordResetTokenRepository.save(resetToken);
 
-    // Send password reset email asynchronously
+    // Send password reset email
     await this.emailService.sendPasswordResetEmail(user.email, token);
 
     return {
@@ -318,5 +347,99 @@ export class AuthService {
     hash: string,
   ): Promise<boolean> {
     return bcrypt.compare(password, hash);
+  }
+
+  async registerWithInvite(
+    acceptDto: AcceptInvitationDto,
+    invitation: Invitation,
+  ) {
+    const { firstName, lastName, password } = acceptDto;
+
+    // Check if user already exists
+    const existingUser = await this.userRepository.findOne({
+      where: { email: invitation.email.toLowerCase() },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('User already exists');
+    }
+
+    // Hash password
+    const password_hash = await this.hashPassword(password);
+
+    // Create user
+    const user = this.userRepository.create({
+      tenant_id: invitation.tenant_id,
+      email: invitation.email.toLowerCase(),
+      password_hash,
+      first_name: firstName,
+      last_name: lastName,
+      status: 'active',
+    });
+
+    const savedUser = await this.userRepository.save(user);
+
+    // Create user-tenant role with role from invitation
+    const userTenantRole = this.userTenantRoleRepository.create({
+      user_id: savedUser.id,
+      tenant_id: invitation.tenant_id,
+      role: invitation.role,
+    });
+
+    await this.userTenantRoleRepository.save(userTenantRole);
+
+    // Get tenant for JWT
+    const tenant = await this.tenantRepository.findOne({
+      where: { id: invitation.tenant_id },
+    });
+
+    if (!tenant) {
+      throw new BadRequestException('Tenant not found');
+    }
+
+    // Get user roles
+    const userRoles = await this.userTenantRoleRepository.find({
+      where: {
+        user_id: savedUser.id,
+        tenant_id: invitation.tenant_id,
+      },
+    });
+
+    const roles = userRoles.map((ur) => ur.role);
+
+    // Generate JWT token
+    const now = Math.floor(Date.now() / 1000);
+    const expiresIn = 86400; // 24 hours in seconds
+
+    const payload = {
+      sub: savedUser.id,
+      email: savedUser.email,
+      tenantId: savedUser.tenant_id,
+      roles,
+      enabledServices: tenant.enabled_services,
+      iat: now,
+      exp: now + expiresIn,
+    };
+
+    const access_token = await this.jwtService.signAsync(payload);
+
+    // Return success response with JWT token and user data
+    return {
+      success: true,
+      data: {
+        token: access_token,
+        user: {
+          id: savedUser.id,
+          email: savedUser.email,
+          firstName: savedUser.first_name,
+          lastName: savedUser.last_name,
+          tenantId: savedUser.tenant_id,
+          roles,
+        },
+      },
+      meta: {
+        timestamp: new Date().toISOString(),
+      },
+    };
   }
 }

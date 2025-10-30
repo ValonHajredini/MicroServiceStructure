@@ -3,6 +3,14 @@ import { IsEmail, IsString, MinLength, Matches } from 'class-validator';
 
 export class RegisterDto {
   @ApiProperty({
+    example: 'Acme Corporation',
+    description: 'Company/Organization name',
+  })
+  @IsString()
+  @MinLength(1)
+  companyName: string;
+
+  @ApiProperty({
     example: 'user@example.com',
     description: 'User email address',
   })

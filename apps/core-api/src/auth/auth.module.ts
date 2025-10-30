@@ -5,12 +5,13 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { EmailService } from '../common/services/email.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { User } from '../users/entities/user.entity';
 import { Tenant } from '../tenants/entities/tenant.entity';
 import { UserTenantRole } from '../users/entities/user-tenant-role.entity';
 import { PasswordResetToken } from './entities/password-reset-token.entity';
+import { InvitationsModule } from '../invitations/invitations.module';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
@@ -22,21 +23,20 @@ import { PasswordResetToken } from './entities/password-reset-token.entity';
       PasswordResetToken,
     ]),
     JwtModule.registerAsync({
-      useFactory: (configService: ConfigService): JwtModuleOptions => {
-        const expiresIn = configService.get('JWT_EXPIRATION') || '24h';
-        return {
-          secret: configService.get<string>('JWT_SECRET'),
-          signOptions: {
-            expiresIn,
-            algorithm: 'HS256',
-          },
-        };
-      },
+      useFactory: (configService: ConfigService): JwtModuleOptions => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: {
+          expiresIn: configService.get('JWT_EXPIRATION') || '24h',
+          algorithm: 'HS256' as const,
+        },
+      }),
       inject: [ConfigService],
     }),
+    InvitationsModule,
+    EmailModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, EmailService, JwtStrategy],
+  providers: [AuthService, JwtStrategy],
   exports: [AuthService, JwtStrategy],
 })
 export class AuthModule {}

@@ -39,6 +39,7 @@ describe('AuthController', () => {
         password: 'SecurePass123!',
         firstName: 'John',
         lastName: 'Doe',
+        companyName: 'Test Company',
       };
 
       const expectedResponse = {
@@ -47,6 +48,9 @@ describe('AuthController', () => {
           userId: 'user-id',
           tenantId: 'tenant-id',
           message: 'Registration successful',
+        },
+        meta: {
+          timestamp: expect.any(String),
         },
       };
 
@@ -77,6 +81,9 @@ describe('AuthController', () => {
             lastName: 'Doe',
             tenantId: 'tenant-id',
           },
+        },
+        meta: {
+          timestamp: expect.any(String),
         },
       };
 

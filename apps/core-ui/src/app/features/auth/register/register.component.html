@@ -1,0 +1,101 @@
+<div class="register-container">
+  <div class="register-card">
+    <h1>Create Your Account</h1>
+    <p class="subtitle">Join us today! Please fill in your details.</p>
+
+    <div *ngIf="generalError" class="error-message">
+      {{ generalError }}
+    </div>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="companyName">Company Name</label>
+        <input
+          type="text"
+          id="companyName"
+          formControlName="companyName"
+          placeholder="Enter company name"
+          [class.error]="companyName?.invalid && companyName?.touched"
+        />
+        <div class="validation-error" *ngIf="companyName?.invalid && companyName?.touched">
+          <small *ngIf="companyName?.errors?.['required']">Company name is required</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          placeholder="Enter email address"
+          [class.error]="email?.invalid && email?.touched"
+        />
+        <div class="validation-error" *ngIf="email?.invalid && email?.touched">
+          <small *ngIf="email?.errors?.['required']">Email is required</small>
+          <small *ngIf="email?.errors?.['email']">Invalid email format</small>
+          <small *ngIf="email?.errors?.['serverError']">{{ email?.errors?.['serverError'] }}</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          formControlName="password"
+          placeholder="Enter password"
+          [class.error]="password?.invalid && password?.touched"
+        />
+        <div class="validation-error" *ngIf="password?.invalid && password?.touched">
+          <small *ngIf="password?.errors?.['required']">Password is required</small>
+          <ng-container *ngIf="password?.errors?.['passwordStrength']">
+            <small *ngFor="let error of getPasswordErrors()">
+              {{ error }}
+            </small>
+          </ng-container>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="firstName">First Name</label>
+        <input
+          type="text"
+          id="firstName"
+          formControlName="firstName"
+          placeholder="Enter first name"
+          [class.error]="firstName?.invalid && firstName?.touched"
+        />
+        <div class="validation-error" *ngIf="firstName?.invalid && firstName?.touched">
+          <small *ngIf="firstName?.errors?.['required']">First name is required</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="lastName">Last Name</label>
+        <input
+          type="text"
+          id="lastName"
+          formControlName="lastName"
+          placeholder="Enter last name"
+          [class.error]="lastName?.invalid && lastName?.touched"
+        />
+        <div class="validation-error" *ngIf="lastName?.invalid && lastName?.touched">
+          <small *ngIf="lastName?.errors?.['required']">Last name is required</small>
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        class="btn-primary"
+        [disabled]="isSubmitting"
+      >
+        {{ isSubmitting ? 'Creating Account...' : 'Register' }}
+      </button>
+    </form>
+
+    <div class="login-link">
+      Already have an account? <a routerLink="/login">Login</a>
+    </div>
+  </div>
+</div>

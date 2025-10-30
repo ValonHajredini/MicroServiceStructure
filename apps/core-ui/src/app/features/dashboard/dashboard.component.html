@@ -1,0 +1,51 @@
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <div>
+      <h1>Dashboard</h1>
+      <p class="subtitle">Access your enabled services below</p>
+    </div>
+    <p-button
+      label="Manage Services"
+      icon="pi pi-cog"
+      styleClass="p-button-outlined"
+      (onClick)="goToServiceManagement()"
+    />
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <i class="pi pi-spin pi-spinner" style="font-size: 3rem"></i>
+      <p>Loading your dashboard...</p>
+    </div>
+  } @else if (enabledServices().length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-info-circle"></i>
+      <h3>No Services Enabled</h3>
+      <p>Your organization hasn't enabled any services yet.</p>
+      <p-button
+        label="Enable Services"
+        icon="pi pi-plus"
+        (onClick)="goToServiceManagement()"
+      />
+    </div>
+  } @else {
+    <div class="services-grid">
+      @for (service of services(); track service.name) {
+        <app-service-card
+          [service]="service"
+          (open)="openService($event)"
+          (requestAccess)="requestAccess($event)"
+        />
+      }
+    </div>
+  }
+</div>
+
+@if (selectedService()) {
+  <app-request-access-modal
+    [visible]="showModal()"
+    [serviceName]="selectedService()!.name"
+    [serviceLabel]="selectedService()!.label"
+    (onClose)="closeModal()"
+  />
+}

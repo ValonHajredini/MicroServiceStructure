@@ -6,7 +6,12 @@ import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { TenantsModule } from './tenants/tenants.module';
+import { UsersModule } from './users/users.module';
 import { HealthModule } from './health/health.module';
+import { InvitationsModule } from './invitations/invitations.module';
+import { JoinRequestsModule } from './join-requests/join-requests.module';
+import { FilesModule } from './files/files.module';
+import { AuditModule } from './audit/audit.module';
 
 @Module({
   imports: [
@@ -23,6 +28,11 @@ import { HealthModule } from './health/health.module';
     DatabaseModule,
     AuthModule,
     TenantsModule,
+    UsersModule,
+    InvitationsModule,
+    JoinRequestsModule,
+    FilesModule,
+    AuditModule,
     HealthModule,
   ],
   controllers: [AppController],

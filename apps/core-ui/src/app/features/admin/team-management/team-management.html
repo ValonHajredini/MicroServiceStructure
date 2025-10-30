@@ -1,0 +1,248 @@
+<div class="team-management-container">
+  <div class="team-management-card">
+    <div class="header">
+      <h1>Team Management</h1>
+      @if (isAdmin) {
+        <button class="btn-primary" (click)="openInviteDialog()">
+          Invite User
+        </button>
+      }
+    </div>
+
+    <!-- Info message for non-admin users -->
+    @if (!isAdmin) {
+      <div class="info-message">
+        <p>You are viewing team members in read-only mode.</p>
+      </div>
+    }
+
+    <!-- Error message -->
+    @if (error()) {
+      <div class="error-message">{{ error() }}</div>
+    }
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button
+        class="tab-button"
+        [class.active]="selectedTab() === 0"
+        (click)="selectTab(0)"
+      >
+        Team Members
+      </button>
+      @if (isAdmin) {
+        <button
+          class="tab-button"
+          [class.active]="selectedTab() === 1"
+          (click)="selectTab(1)"
+        >
+          Pending Requests
+          @if (joinRequests().length > 0) {
+            <span class="badge">{{ joinRequests().length }}</span>
+          }
+        </button>
+      }
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      <!-- Team Members Tab -->
+      @if (selectedTab() === 0) {
+        @if (isLoading()) {
+          <div class="loading-state">
+            <p>Loading team members...</p>
+          </div>
+        } @else if (users().length === 0) {
+          <div class="empty-state">
+            <p>No team members found</p>
+          </div>
+        } @else {
+          <div class="users-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Joined</th>
+                  @if (isAdmin) {
+                    <th>Actions</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (user of users(); track user.id) {
+                  <tr>
+                    <td>{{ user.firstName }} {{ user.lastName }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>
+                      <span class="role-badge" [class]="getRoleClass(user.role)">
+                        {{ user.role }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="status-badge" [class]="getStatusClass(user.status)">
+                        {{ user.status }}
+                      </span>
+                    </td>
+                    <td>{{ formatDate(user.createdAt) }}</td>
+                    @if (isAdmin) {
+                      <td>
+                        @if (!isCurrentUser(user.id)) {
+                          <div class="action-buttons">
+                            <button
+                              class="btn-small"
+                              (click)="openChangeRoleDialog(user)"
+                              [disabled]="isProcessing()"
+                            >
+                              Change Role
+                            </button>
+                            <button
+                              class="btn-small btn-danger"
+                              (click)="openRemoveDialog(user)"
+                              [disabled]="isProcessing()"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        } @else {
+                          <span class="text-muted">You</span>
+                        }
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+
+      <!-- Pending Requests Tab -->
+      @if (selectedTab() === 1 && isAdmin) {
+        @if (joinRequests().length === 0) {
+          <div class="empty-state">
+            <p>No pending join requests</p>
+          </div>
+        } @else {
+          <div class="requests-list">
+            @for (request of joinRequests(); track request.id) {
+              <div class="request-card">
+                <div class="request-header">
+                  <div class="user-info">
+                    <h3>{{ request.user.firstName }} {{ request.user.lastName }}</h3>
+                    <p class="email">{{ request.user.email }}</p>
+                  </div>
+                  <span class="status-badge">{{ request.status }}</span>
+                </div>
+
+                @if (request.message) {
+                  <div class="request-message">
+                    <p class="message-label">Message:</p>
+                    <p class="message-text">{{ request.message }}</p>
+                  </div>
+                }
+
+                <div class="request-footer">
+                  <span class="request-date">{{ formatDate(request.createdAt) }}</span>
+                  <div class="request-actions">
+                    <button
+                      class="btn-reject"
+                      (click)="rejectRequest(request)"
+                      [disabled]="isProcessing()"
+                    >
+                      Reject
+                    </button>
+                    <button
+                      class="btn-approve"
+                      (click)="approveRequest(request)"
+                      [disabled]="isProcessing()"
+                    >
+                      Approve
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <!-- Change Role Modal -->
+  @if (showChangeRoleModal()) {
+    <div class="modal-overlay" (click)="closeChangeRoleModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <h2>Change User Role</h2>
+        <p class="modal-user-name">
+          {{ selectedUser()?.firstName }} {{ selectedUser()?.lastName }}
+        </p>
+
+        <div class="form-group">
+          <label>Change role to:</label>
+          <select [formControl]="selectedRole" class="form-control">
+            <option value="admin">Admin - Full access to manage team and settings</option>
+            <option value="user">User - Standard access to services</option>
+          </select>
+        </div>
+
+        <div class="modal-actions">
+          <button
+            class="btn-secondary"
+            (click)="closeChangeRoleModal()"
+            [disabled]="isProcessing()"
+          >
+            Cancel
+          </button>
+          <button
+            class="btn-primary"
+            (click)="submitChangeRole()"
+            [disabled]="isProcessing()"
+          >
+            {{ isProcessing() ? 'Changing...' : 'Change Role' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Remove User Modal -->
+  @if (showRemoveUserModal()) {
+    <div class="modal-overlay" (click)="closeRemoveUserModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <h2>Remove User</h2>
+        <p class="modal-user-name">
+          {{ selectedUser()?.firstName }} {{ selectedUser()?.lastName }}
+        </p>
+
+        <div class="warning-message">
+          <p>
+            Are you sure you want to remove this user from your organization?
+          </p>
+          <p class="warning-text">
+            ⚠️ This action cannot be undone. The user will lose access to all services.
+          </p>
+        </div>
+
+        <div class="modal-actions">
+          <button
+            class="btn-secondary"
+            (click)="closeRemoveUserModal()"
+            [disabled]="isProcessing()"
+          >
+            Cancel
+          </button>
+          <button
+            class="btn-danger"
+            (click)="submitRemoveUser()"
+            [disabled]="isProcessing()"
+          >
+            {{ isProcessing() ? 'Removing...' : 'Remove User' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

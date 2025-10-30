@@ -43,7 +43,7 @@ describe('JwtStrategy', () => {
       enabledServices: [],
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 86400,
-    } as JwtPayload;
+    } as unknown as JwtPayload;
 
     expect(() => strategy.validate(payload)).toThrow(UnauthorizedException);
     expect(() => strategy.validate(payload)).toThrow('Invalid token payload');
@@ -57,7 +57,7 @@ describe('JwtStrategy', () => {
       enabledServices: [],
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 86400,
-    } as JwtPayload;
+    } as unknown as JwtPayload;
 
     expect(() => strategy.validate(payload)).toThrow(UnauthorizedException);
     expect(() => strategy.validate(payload)).toThrow('Invalid token payload');
@@ -87,7 +87,7 @@ describe('JwtStrategy', () => {
       enabledServices: [],
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 86400,
-    } as JwtPayload;
+    } as unknown as JwtPayload;
 
     const result = strategy.validate(payload);
 

@@ -163,7 +163,10 @@ describe('Auth E2E Tests', () => {
       });
 
       expect(tokenRecord).toBeDefined();
-      expect(tokenRecord.expires_at.getTime()).toBeGreaterThan(Date.now());
+      expect(tokenRecord).not.toBeNull();
+      if (tokenRecord) {
+        expect(tokenRecord.expires_at.getTime()).toBeGreaterThan(Date.now());
+      }
 
       // Generate the same token that was stored (we need the unhashed version)
       // Note: In production, this would come from the email link
@@ -271,13 +274,15 @@ describe('Auth E2E Tests', () => {
 
       // Update token to be expired (1 hour ago)
       const expiredDate = new Date(Date.now() - 60 * 60 * 1000);
-      await passwordResetTokenRepository.update(
-        { user_id: user.user.id },
-        {
-          token_hash: hashedExpiredToken,
-          expires_at: expiredDate,
-        },
-      );
+      if (user && user.user) {
+        await passwordResetTokenRepository.update(
+          { user_id: user.user.id },
+          {
+            token_hash: hashedExpiredToken,
+            expires_at: expiredDate,
+          },
+        );
+      }
 
       // Try to reset with expired token
       await request(app.getHttpServer())

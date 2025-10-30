@@ -1,0 +1,7 @@
+aws --profile do-tor1 configure set aws_access_key_id DO00JF6PV2JRKH3TC6CQ
+aws --profile do-tor1 configure set aws_secret_access_key J/JvoDsv8YSTegBEeUjzg3TPFdyMmKq3fIFrQXryoPU
+aws --profile do-tor1 configure set endpoint_url https://lon1.digitaloceanspaces.com
+
+
+
+

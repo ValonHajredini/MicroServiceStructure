@@ -1,0 +1,77 @@
+<div class="service-management-container">
+  <p-card>
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <h2>Service Management</h2>
+        <p class="subtitle">Enable the services your organization needs</p>
+      </div>
+    </ng-template>
+
+    <div class="content">
+      @if (loading()) {
+        <div class="loading-container">
+          <p-progressSpinner />
+          <p>Loading services...</p>
+        </div>
+      } @else {
+        @if (errorMessage()) {
+          <p-message severity="error" [text]="errorMessage()!" />
+        }
+
+        @if (successMessage()) {
+          <p-message severity="success" [text]="successMessage()!" />
+          <div class="logout-prompt">
+            <p>Would you like to log out now?</p>
+            <p-button
+              label="Log Out"
+              icon="pi pi-sign-out"
+              (onClick)="logout()"
+              styleClass="p-button-sm"
+            />
+          </div>
+        }
+
+        <div class="services-list">
+          @for (service of availableServices; track service.name) {
+            <div
+              class="service-item"
+              [class.disabled]="service.comingSoon"
+            >
+              <div class="service-checkbox">
+                <p-checkbox
+                  [binary]="true"
+                  [ngModel]="isServiceSelected(service.name)"
+                  (ngModelChange)="toggleService(service.name)"
+                  [disabled]="service.comingSoon || saving()"
+                  [inputId]="service.name"
+                />
+              </div>
+              <div class="service-info">
+                <div class="service-header">
+                  <i [class]="service.icon"></i>
+                  <h3>{{ service.label }}</h3>
+                  @if (service.comingSoon) {
+                    <span class="coming-soon-badge">Coming Soon</span>
+                  }
+                </div>
+                <p class="service-description">{{ service.description }}</p>
+              </div>
+            </div>
+          }
+        </div>
+
+        @if (!successMessage()) {
+          <div class="actions">
+            <p-button
+              label="Save Changes"
+              icon="pi pi-check"
+              (onClick)="saveChanges()"
+              [loading]="saving()"
+              [disabled]="saving()"
+            />
+          </div>
+        }
+      }
+    </div>
+  </p-card>
+</div>

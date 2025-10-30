@@ -35,3 +35,6 @@ Thumbs.db
 # Logs
 logs/
 *.log
+
+# Temporary files and email previews
+tmp/

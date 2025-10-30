@@ -1,0 +1,57 @@
+<div class="login-container">
+  <div class="login-card">
+    <h1>Login</h1>
+    <p class="subtitle">Welcome back! Please login to your account.</p>
+
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          placeholder="Enter your email"
+          [class.error]="email?.invalid && email?.touched"
+        />
+        <div class="validation-error" *ngIf="email?.invalid && email?.touched">
+          <small *ngIf="email?.errors?.['required']">Email is required</small>
+          <small *ngIf="email?.errors?.['email']">Please enter a valid email address</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          formControlName="password"
+          placeholder="Enter your password"
+          [class.error]="password?.invalid && password?.touched"
+        />
+        <div class="validation-error" *ngIf="password?.invalid && password?.touched">
+          <small *ngIf="password?.errors?.['required']">Password is required</small>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <a routerLink="/forgot-password" class="forgot-link">Forgot password?</a>
+      </div>
+
+      <button
+        type="submit"
+        class="btn-primary"
+        [disabled]="isSubmitting"
+      >
+        {{ isSubmitting ? 'Logging in...' : 'Login' }}
+      </button>
+    </form>
+
+    <div class="register-link">
+      Don't have an account? <a routerLink="/register">Register</a>
+    </div>
+  </div>
+</div>

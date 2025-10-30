@@ -1,0 +1,43 @@
+<p-card
+  [styleClass]="'service-card ' + (service.isAvailable ? 'enabled' : 'disabled')"
+>
+  <ng-template pTemplate="header">
+    <div class="card-header">
+      <i [class]="service.icon"></i>
+      @if (!service.isAvailable) {
+        <i class="lock-icon pi pi-lock"></i>
+      }
+      <span class="status-badge"
+            [class.available]="service.isAvailable"
+            [class.locked]="!service.isAvailable">
+        {{ service.status }}
+      </span>
+    </div>
+  </ng-template>
+
+  <h3>{{ service.label }}</h3>
+  <p class="service-description">{{ service.description }}</p>
+
+  <ng-template pTemplate="footer">
+    @if (service.isAvailable && !service.comingSoon) {
+      <p-button
+        label="Open"
+        icon="pi pi-arrow-right"
+        styleClass="p-button-sm"
+        (onClick)="onOpen()"
+      />
+    } @else if (!service.isAvailable) {
+      <p-button
+        label="Request Access"
+        icon="pi pi-lock-open"
+        styleClass="p-button-sm p-button-outlined"
+        (onClick)="onRequestAccess()"
+      />
+    } @else if (service.comingSoon) {
+      <div class="coming-soon">
+        <i class="pi pi-clock"></i>
+        <span>Coming Soon</span>
+      </div>
+    }
+  </ng-template>
+</p-card>

@@ -1,0 +1,101 @@
+::ng-deep .service-card {
+  transition: all 0.3s ease;
+  height: 100%;
+
+  &.enabled {
+    .card-header {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-600) 100%);
+
+      i:first-child {
+        color: white;
+      }
+    }
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  &.disabled {
+    opacity: 0.7;
+
+    .card-header {
+      background: linear-gradient(135deg, var(--surface-200) 0%, var(--surface-300) 100%);
+      position: relative;
+
+      i:first-child {
+        color: var(--surface-600);
+      }
+
+      .lock-icon {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        font-size: 1.5rem;
+        color: var(--surface-600);
+      }
+    }
+  }
+
+  .card-header {
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 120px;
+    position: relative;
+
+    i:first-child {
+      font-size: 3rem;
+    }
+
+    .status-badge {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+
+      &.available {
+        background: #e8f5e9;
+        color: #2e7d32;
+      }
+
+      &.locked {
+        background: #fce4ec;
+        color: #c2185b;
+      }
+    }
+  }
+
+  h3 {
+    margin: 0 0 0.75rem 0;
+    color: var(--text-color);
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+
+  .service-description {
+    margin: 0;
+    color: var(--text-color-secondary);
+    line-height: 1.6;
+    min-height: 3rem;
+  }
+
+  .coming-soon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    color: var(--text-color-secondary);
+    font-style: italic;
+
+    i {
+      color: var(--orange-500);
+    }
+  }
+}
