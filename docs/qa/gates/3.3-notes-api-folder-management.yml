@@ -1,0 +1,66 @@
+# Quality Gate Decision - Story 3.3
+schema: 1
+story: "3.3"
+story_title: "Notes API - Folder Management"
+gate: PASS
+status_reason: "All acceptance criteria implemented with comprehensive test coverage. Clean architecture with proper security and tenant isolation. Minor performance optimization opportunity identified but non-blocking."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-01-31T12:00:00Z"
+
+# Always present but only active when WAIVED
+waiver: { active: false }
+
+# Issues identified (non-blocking)
+top_issues:
+  - id: "PERF-002"
+    severity: low
+    finding: "Delete operation uses N+1 query pattern for child folders"
+    suggested_action: "Consider bulk delete operation for child folders to improve performance at scale"
+  - id: "TYPE-001"
+    severity: low
+    finding: "Type safety bypassed with 'as any' in notes.service.ts:151"
+    suggested_action: "Define proper type for deleted_at null check"
+
+# Risk summary
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 2 }
+  recommendations:
+    must_fix: []
+    monitor:
+      - "Performance of delete operation with many child folders"
+
+# Quality scoring
+quality_score: 92
+expires: "2025-02-14T00:00:00Z"
+
+# Evidence
+evidence:
+  tests_reviewed: 36
+  risks_identified: 2
+  trace:
+    ac_covered: [1, 2, 3, 4, 5, 6, 7]
+    ac_gaps: []
+
+# NFR validation
+nfr_validation:
+  security:
+    status: PASS
+    notes: "Authorization checks in place (owner/admin), tenant isolation enforced, input validation via DTOs, no SQL injection risks"
+  performance:
+    status: CONCERNS
+    notes: "Minor N+1 query pattern in delete operation - acceptable for current scale"
+  reliability:
+    status: PASS
+    notes: "Cascade deletion properly handles orphaned notes, single-level nesting validation prevents data inconsistencies"
+  maintainability:
+    status: PASS
+    notes: "Clean code with clear separation of concerns, well-documented methods referencing ACs, comprehensive test coverage"
+
+# Recommendations
+recommendations:
+  immediate: []
+  future:
+    - action: "Optimize folder deletion to use bulk operations for child folders"
+      refs: ["apps/notes-api/src/folders/folders.service.ts:150-165"]
+    - action: "Replace 'as any' type assertion with proper nullable type handling"
+      refs: ["apps/notes-api/src/notes/notes.service.ts:151"]

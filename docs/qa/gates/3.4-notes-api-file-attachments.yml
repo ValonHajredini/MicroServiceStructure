@@ -1,0 +1,256 @@
+# Quality Gate: Story 3.4 - Notes API File Attachments
+schema: 1
+story: "3.4"
+story_title: "Notes API - File Attachments"
+gate: CONCERNS
+status_reason: "Functionally complete with good unit test coverage (18 tests passing), but missing critical integration/e2e tests for attachment endpoints. Performance optimization needed for file metadata batch fetching."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-11-01T12:00:00Z"
+
+# Critical gap identified
+top_issues:
+  - id: "TEST-001"
+    severity: high
+    finding: "Missing integration/e2e tests for attachment functionality"
+    details: "Task 11 lists comprehensive integration test scenarios (full lifecycle, size limits, tenant isolation, admin access, Core Service integration, error handling) but no e2e test file was created. Only unit tests exist (18 passing)."
+    suggested_action: "Create test/attachments.e2e-spec.ts or add attachment tests to test/notes.e2e-spec.ts with scenarios from Task 11"
+    refs:
+      - "apps/notes-api/test/ (missing attachments.e2e-spec.ts)"
+      - "docs/stories/3.4.story.md:144-151 (Task 11 requirements)"
+    suggested_owner: "dev"
+
+  - id: "PERF-001"
+    severity: medium
+    finding: "Suboptimal file metadata batch fetching"
+    details: "notes.service.ts:177-209 fetches file metadata individually using Promise.all instead of using the available batch method getMultipleFileMetadata. This creates an N+1 query pattern when notes have multiple attachments."
+    suggested_action: "Refactor to use FilesClientService.getMultipleFileMetadata() for batch fetching"
+    refs:
+      - "apps/notes-api/src/notes/notes.service.ts:177-209"
+      - "apps/notes-api/src/files/files-client.service.ts:107-114 (batch method available)"
+    suggested_owner: "dev"
+
+  - id: "REL-001"
+    severity: low
+    finding: "Limited error context for file metadata failures"
+    details: "When file metadata retrieval fails, error messages lack diagnostic context (file ID, error type) for troubleshooting"
+    suggested_action: "Enhance error messages to include file ID and error type"
+    refs:
+      - "apps/notes-api/src/notes/notes.service.ts:196-206"
+    suggested_owner: "dev"
+
+  - id: "MAINT-001"
+    severity: low
+    finding: "Duplicate authorization logic"
+    details: "Authorization checks (owner OR admin pattern) duplicated in attachments.service.ts instead of using shared guard"
+    suggested_action: "Extract to ResourceOwnerGuard for consistency and DRY"
+    refs:
+      - "apps/notes-api/src/notes/attachments.service.ts:62-66"
+      - "apps/notes-api/src/notes/attachments.service.ts:139-143"
+    suggested_owner: "dev"
+
+waiver: { active: false }
+
+# Quality metrics
+quality_score: 70  # 100 - (20 for high) - (10 for medium) = 70
+expires: "2025-11-15T00:00:00Z"
+
+# Evidence from comprehensive review
+evidence:
+  tests_reviewed: 18  # 18 unit tests (all passing), 0 e2e tests for attachments
+  risks_identified: 4
+  files_reviewed: 8
+  trace:
+    ac_covered: [1, 2, 3, 4, 5, 6, 7]  # All 7 ACs implemented
+    ac_gaps: []  # No functional gaps
+    test_coverage_gaps:
+      - "E2E tests for POST /notes/:id/attachments"
+      - "E2E tests for DELETE /notes/:id/attachments/:attachmentId"
+      - "E2E tests for GET /notes/:id with attachments"
+      - "E2E tests for size limit enforcement"
+      - "E2E tests for tenant isolation on attachments"
+      - "E2E tests for authorization (owner vs admin)"
+      - "E2E tests for Core Service integration"
+      - "E2E tests for cascade delete to attachments"
+
+# NFR Assessment
+nfr_validation:
+  security:
+    status: PASS
+    notes: "JWT auth, tenant isolation with file ownership validation, authorization checks (owner OR admin), input validation, size limits (25MB/file, 100MB/note), proper token forwarding to Core Service. No vulnerabilities identified."
+  performance:
+    status: CONCERNS
+    notes: "PERF-001: Suboptimal file metadata fetching creates N+1 query pattern. Should use batch method. Impact limited for MVP scale but needs optimization before production."
+  reliability:
+    status: PASS
+    notes: "Proper error handling, graceful degradation when file metadata unavailable, soft delete cascade, size validation prevents resource exhaustion, timeout/retry inherited from FilesClientService."
+  maintainability:
+    status: PASS
+    notes: "Clean service architecture, good separation of concerns, comprehensive unit tests, proper documentation. Minor duplication in authorization logic."
+
+# Risk Summary
+risk_summary:
+  totals:
+    critical: 0
+    high: 1  # TEST-001
+    medium: 1  # PERF-001
+    low: 2  # REL-001, MAINT-001
+  highest_identified:
+    - "Missing e2e tests reduces confidence in external service integration"
+    - "N+1 query pattern could impact performance with many attachments"
+  recommendations:
+    must_fix:
+      - "Create comprehensive e2e tests for attachment endpoints (TEST-001)"
+      - "Optimize file metadata batch fetching to use getMultipleFileMetadata (PERF-001)"
+    monitor:
+      - "Watch for Core Service latency impact with batch operations"
+      - "Monitor attachment sizes in production to validate 100MB limit"
+
+# Detailed recommendations
+recommendations:
+  immediate:  # Must fix before production
+    - action: "Create comprehensive e2e tests for attachment endpoints"
+      refs: ["apps/notes-api/test/attachments.e2e-spec.ts"]
+      priority: high
+      status: PENDING
+      details: "Add tests for: full attachment lifecycle, size validation (25MB/100MB), tenant isolation, owner/admin authorization, Core Service integration, cascade delete on note deletion"
+
+    - action: "Optimize file metadata batch fetching"
+      refs: ["apps/notes-api/src/notes/notes.service.ts:177-209"]
+      priority: medium
+      status: PENDING
+      details: "Replace individual getFileMetadata calls with single getMultipleFileMetadata batch call"
+
+  future:  # Can be addressed later
+    - action: "Enhance error messages with diagnostic context"
+      refs: ["apps/notes-api/src/notes/notes.service.ts:196-206"]
+      priority: low
+      status: PENDING
+      notes: "Include file ID and error type in error messages for better troubleshooting"
+
+    - action: "Extract authorization logic to ResourceOwnerGuard"
+      refs: ["apps/notes-api/src/notes/attachments.service.ts"]
+      priority: low
+      status: PENDING
+      notes: "Eliminate duplication by using shared guard for owner OR admin pattern"
+
+    - action: "Add attachment metadata to note list endpoint"
+      refs: ["apps/notes-api/src/notes/notes.service.ts"]
+      priority: low
+      status: PENDING
+      notes: "Include attachment_count and attachment_total_size in list view for UI optimization"
+
+# Requirements Traceability
+requirements_traceability:
+  AC_1_POST_endpoint:
+    status: IMPLEMENTED
+    test_coverage: UNIT_ONLY
+    tests:
+      - "attachments.service.spec.ts:108-139 (successful creation)"
+      - "attachments.service.spec.ts:141-149 (note not found)"
+      - "attachments.service.spec.ts:182-194 (file tenant validation)"
+    missing_tests:
+      - "E2E test for POST /notes/:id/attachments with real HTTP request"
+
+  AC_2_creates_attachment_record:
+    status: IMPLEMENTED
+    test_coverage: UNIT_ONLY
+    tests:
+      - "attachments.service.spec.ts:108-139"
+    implementation:
+      - "attachments.service.ts:85-91"
+
+  AC_3_GET_includes_attachments:
+    status: IMPLEMENTED
+    test_coverage: UNIT_ONLY
+    tests:
+      - "notes.service.spec.ts (findOne with attachments)"
+    implementation:
+      - "notes.service.ts:151-226"
+    missing_tests:
+      - "E2E test for GET /notes/:id returning enriched attachment data"
+
+  AC_4_DELETE_removes_attachment:
+    status: IMPLEMENTED
+    test_coverage: UNIT_ONLY
+    tests:
+      - "attachments.service.spec.ts:266-273 (successful delete)"
+      - "attachments.service.spec.ts:276-284 (note not found)"
+      - "attachments.service.spec.ts:310-320 (attachment not found)"
+    implementation:
+      - "attachments.service.ts:118-161"
+    missing_tests:
+      - "E2E test for DELETE /notes/:id/attachments/:attachmentId"
+
+  AC_5_size_limits:
+    status: IMPLEMENTED
+    test_coverage: UNIT_ONLY
+    tests:
+      - "attachments.service.spec.ts:197-211 (25MB limit)"
+      - "attachments.service.spec.ts:213-234 (100MB total limit)"
+      - "attachments.service.spec.ts:331-343 (individual file validation)"
+      - "attachments.service.spec.ts:346-365 (total size validation)"
+    implementation:
+      - "attachments.service.ts:170-216"
+    missing_tests:
+      - "E2E test validating 25MB per file limit with real file uploads"
+      - "E2E test validating 100MB total limit with multiple files"
+
+  AC_6_cascade_soft_delete:
+    status: IMPLEMENTED
+    test_coverage: UNIT_ONLY
+    tests:
+      - "notes.service.spec.ts (soft delete cascade test expected)"
+    implementation:
+      - "notes.service.ts:279-294"
+    missing_tests:
+      - "E2E test verifying cascade delete behavior"
+
+  AC_7_authorization:
+    status: IMPLEMENTED
+    test_coverage: UNIT_ONLY
+    tests:
+      - "attachments.service.spec.ts:152-162 (owner check)"
+      - "attachments.service.spec.ts:164-180 (admin access)"
+      - "attachments.service.spec.ts:287-297 (delete owner check)"
+      - "attachments.service.spec.ts:299-308 (delete admin access)"
+    implementation:
+      - "attachments.service.ts:62-66, 139-143"
+    missing_tests:
+      - "E2E test for authorization across different user roles"
+
+# Strengths Worth Highlighting
+strengths:
+  - "Comprehensive unit test coverage: 18 tests passing (100% pass rate)"
+  - "All 7 acceptance criteria functionally implemented and verified"
+  - "Clean service architecture following NestJS best practices"
+  - "Robust error handling with descriptive error messages"
+  - "Proper tenant isolation with file ownership validation"
+  - "Authorization consistently applied (owner OR admin pattern)"
+  - "Graceful handling of Core Service unavailability"
+  - "Good code documentation with AC references in comments"
+  - "Size limits properly enforced (25MB/file, 100MB/note)"
+  - "Soft delete cascade prevents orphaned attachment records"
+  - "Proper input validation with class-validator decorators"
+
+# Final Assessment
+final_assessment:
+  gate_decision: CONCERNS
+  confidence_level: MEDIUM
+  production_ready: false
+  blockers:
+    - "Missing e2e tests for critical attachment functionality"
+    - "Performance optimization needed for file metadata fetching"
+  technical_debt: "Low - minor duplication in authorization logic"
+  recommended_next_action: "Add comprehensive e2e tests and optimize batch fetching, then re-submit for QA review"
+  notes: "Core implementation is solid with good unit test coverage, but the missing e2e tests for a feature that integrates with an external service (Core File Service) is a critical gap. Task 11 explicitly required integration tests. Estimated 2-4 hours to resolve."
+  estimated_effort_to_pass: "2-4 hours"
+
+# Audit trail
+history:
+  - at: "2025-11-01T12:00:00Z"
+    gate: CONCERNS
+    quality_score: 70
+    reviewer: "Quinn (Test Architect)"
+    note: "Initial review - Functionally complete with good unit tests (18 passing) but missing e2e tests for attachments. Performance optimization needed for batch file metadata fetching. 4 issues identified (1 high, 1 medium, 2 low)."
+    issues_found: 4
+    test_coverage: "Unit only (18 tests)"
