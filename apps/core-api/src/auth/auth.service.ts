@@ -105,20 +105,17 @@ export class AuthService {
     const roles = userRoles.map((ur) => ur.role);
 
     // Generate JWT token
-    const now = Math.floor(Date.now() / 1000);
-    const expiresIn = 86400; // 24 hours in seconds
-
     const payload = {
       sub: savedUser.id,
       email: savedUser.email,
       tenantId: savedUser.tenant_id,
       roles,
       enabledServices: tenant.enabled_services,
-      iat: now,
-      exp: now + expiresIn,
     };
 
-    const access_token = await this.jwtService.signAsync(payload);
+    const access_token = await this.jwtService.signAsync(payload, {
+      expiresIn: '24h',
+    });
 
     // Return success response with JWT token and user data
     return {
@@ -180,26 +177,23 @@ export class AuthService {
     const roles = userRoles.map((ur) => ur.role);
 
     // Generate JWT token
-    const now = Math.floor(Date.now() / 1000);
-    const expiresIn = 86400; // 24 hours in seconds
-
     const payload = {
       sub: user.id,
       email: user.email,
       tenantId: user.tenant_id,
       roles,
       enabledServices: user.tenant.enabled_services,
-      iat: now,
-      exp: now + expiresIn,
     };
 
-    const access_token = await this.jwtService.signAsync(payload);
+    const access_token = await this.jwtService.signAsync(payload, {
+      expiresIn: '24h',
+    });
 
     // Return success response (no password_hash)
     return {
       success: true,
       data: {
-        access_token,
+        token: access_token,
         user: {
           id: user.id,
           email: user.email,
@@ -408,20 +402,17 @@ export class AuthService {
     const roles = userRoles.map((ur) => ur.role);
 
     // Generate JWT token
-    const now = Math.floor(Date.now() / 1000);
-    const expiresIn = 86400; // 24 hours in seconds
-
     const payload = {
       sub: savedUser.id,
       email: savedUser.email,
       tenantId: savedUser.tenant_id,
       roles,
       enabledServices: tenant.enabled_services,
-      iat: now,
-      exp: now + expiresIn,
     };
 
-    const access_token = await this.jwtService.signAsync(payload);
+    const access_token = await this.jwtService.signAsync(payload, {
+      expiresIn: '24h',
+    });
 
     // Return success response with JWT token and user data
     return {

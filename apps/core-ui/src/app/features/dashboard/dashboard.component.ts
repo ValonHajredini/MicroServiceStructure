@@ -2,6 +2,9 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
+import { AvatarModule } from 'primeng/avatar';
+import { MenuModule } from 'primeng/menu';
+import { MenuItem } from 'primeng/api';
 import { AuthService } from '../../core/services/auth.service';
 import { ServiceCard, ServiceViewModel } from './service-card/service-card';
 import { RequestAccessModal } from './request-access-modal/request-access-modal';
@@ -17,7 +20,15 @@ interface ServiceDefinition {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule, ButtonModule, RouterModule, ServiceCard, RequestAccessModal],
+  imports: [
+    CommonModule,
+    ButtonModule,
+    RouterModule,
+    ServiceCard,
+    RequestAccessModal,
+    AvatarModule,
+    MenuModule,
+  ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
 })
@@ -56,8 +67,32 @@ export class DashboardComponent implements OnInit {
   showModal = signal<boolean>(false);
   selectedService = signal<ServiceViewModel | null>(null);
 
+  userFullName = signal<string>('');
+  userInitials = signal<string>('');
+  userRole = signal<string>('User');
+  tenantName = signal<string>('Your Organization');
+
+  sidebarVisible = signal<boolean>(false);
+  menuItems = signal<MenuItem[]>([]);
+
   ngOnInit(): void {
+    this.loadUserInfo();
     this.loadServices();
+    this.initializeMenu();
+  }
+
+  private loadUserInfo(): void {
+    this.userFullName.set(this.authService.getUserFullName() || 'User');
+    this.userInitials.set(this.authService.getUserInitials() || 'U');
+
+    const user = this.authService.getUserFromToken();
+    if (user?.roles && user.roles.length > 0) {
+      const role = user.roles[0];
+      this.userRole.set(role.charAt(0).toUpperCase() + role.slice(1));
+    }
+
+    // For now, using a placeholder - in a real app, fetch from API
+    this.tenantName.set('My Workspace');
   }
 
   private loadServices(): void {
@@ -99,5 +134,103 @@ export class DashboardComponent implements OnInit {
 
   goToServiceManagement(): void {
     this.router.navigate(['/admin/services']);
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
+
+  toggleSidebar(): void {
+    this.sidebarVisible.set(!this.sidebarVisible());
+  }
+
+  private initializeMenu(): void {
+    const user = this.authService.getUserFromToken();
+    const isAdmin = user?.roles?.includes('admin');
+
+    this.menuItems.set([
+      {
+        label: 'Dashboard',
+        icon: 'pi pi-home',
+        command: () => {
+          this.router.navigate(['/dashboard']);
+          this.sidebarVisible.set(false);
+        },
+      },
+      {
+        separator: true,
+      },
+      {
+        label: 'Services',
+        items: [
+          {
+            label: 'Notes',
+            icon: 'pi pi-file-edit',
+            command: () => {
+              const notesService = this.services().find((s) => s.name === 'notes');
+              if (notesService?.isAvailable) {
+                this.router.navigate(['/notes']);
+                this.sidebarVisible.set(false);
+              }
+            },
+            disabled: !this.enabledServices().includes('notes'),
+          },
+          {
+            label: 'Kanban Board',
+            icon: 'pi pi-th-large',
+            command: () => {
+              const kanbanService = this.services().find((s) => s.name === 'kanban');
+              if (kanbanService?.isAvailable) {
+                this.router.navigate(['/kanban']);
+                this.sidebarVisible.set(false);
+              }
+            },
+            disabled: !this.enabledServices().includes('kanban'),
+          },
+          {
+            label: 'Forms Builder',
+            icon: 'pi pi-list-check',
+            badge: 'Soon',
+            disabled: true,
+          },
+        ],
+      },
+      {
+        separator: true,
+      },
+      {
+        label: 'Settings',
+        items: [
+          {
+            label: 'Profile',
+            icon: 'pi pi-user',
+            command: () => {
+              this.router.navigate(['/profile']);
+              this.sidebarVisible.set(false);
+            },
+          },
+          {
+            label: 'Service Management',
+            icon: 'pi pi-cog',
+            command: () => {
+              this.goToServiceManagement();
+              this.sidebarVisible.set(false);
+            },
+            visible: isAdmin,
+          },
+        ],
+      },
+      {
+        separator: true,
+      },
+      {
+        label: 'Logout',
+        icon: 'pi pi-sign-out',
+        command: () => {
+          this.logout();
+        },
+      },
+    ]);
   }
 }

@@ -9,6 +9,14 @@ import {
 } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { environment } from '../../../../environments/environment';
+
+interface TestUser {
+  email: string;
+  password: string;
+  role: string;
+  description: string;
+}
 
 @Component({
   selector: 'app-login',
@@ -25,6 +33,28 @@ export class Login {
   loginForm: FormGroup;
   errorMessage = '';
   isSubmitting = false;
+  isDevelopment = !environment.production;
+
+  testUsers: TestUser[] = [
+    {
+      email: 'admin@tenant1.com',
+      password: 'Admin123!',
+      role: 'Admin',
+      description: 'Tenant 1 Admin - Full access',
+    },
+    {
+      email: 'member@tenant1.com',
+      password: 'Member123!',
+      role: 'Member',
+      description: 'Tenant 1 Member - Limited access',
+    },
+    {
+      email: 'admin@tenant2.com',
+      password: 'Admin123!',
+      role: 'Admin',
+      description: 'Tenant 2 Admin - Full access',
+    },
+  ];
 
   constructor() {
     this.loginForm = this.fb.group({
@@ -39,6 +69,14 @@ export class Login {
 
   get password() {
     return this.loginForm.get('password');
+  }
+
+  fillCredentials(user: TestUser): void {
+    this.loginForm.patchValue({
+      email: user.email,
+      password: user.password,
+    });
+    this.errorMessage = '';
   }
 
   onSubmit(): void {

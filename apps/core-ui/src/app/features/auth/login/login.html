@@ -53,5 +53,24 @@
     <div class="register-link">
       Don't have an account? <a routerLink="/register">Register</a>
     </div>
+
+    <div *ngIf="isDevelopment" class="dev-tools">
+      <div class="dev-tools-header">
+        <span class="dev-badge">DEV MODE</span>
+        <span class="dev-title">Quick Login</span>
+      </div>
+      <div class="test-users">
+        <button
+          *ngFor="let user of testUsers"
+          type="button"
+          class="test-user-btn"
+          (click)="fillCredentials(user)"
+        >
+          <div class="user-role">{{ user.role }}</div>
+          <div class="user-email">{{ user.email }}</div>
+          <div class="user-description">{{ user.description }}</div>
+        </button>
+      </div>
+    </div>
   </div>
 </div>

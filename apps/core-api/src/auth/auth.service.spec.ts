@@ -332,7 +332,7 @@ describe('AuthService', () => {
       const result = await service.login(loginDto);
 
       expect(result.success).toBe(true);
-      expect(result.data.access_token).toBe('jwt-token');
+      expect(result.data.token).toBe('jwt-token');
       expect(result.data.user.email).toBe('test@example.com');
     });
 
