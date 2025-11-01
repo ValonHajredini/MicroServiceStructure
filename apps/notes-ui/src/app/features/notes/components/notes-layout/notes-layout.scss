@@ -1,0 +1,142 @@
+.notes-app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.notes-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+// Sidebar
+.sidebar {
+  width: 300px;
+  height: 100%;
+  background: #f8f9fa;
+  border-right: 1px solid #dee2e6;
+  overflow-y: auto;
+  transition: transform 0.3s ease;
+
+  &.mobile {
+    position: absolute;
+    left: 0;
+    top: 60px;
+    bottom: 0;
+    z-index: 1000;
+    transform: translateX(-100%);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+
+    &.visible {
+      transform: translateX(0);
+    }
+  }
+}
+
+// Main content
+.main-content {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  overflow: hidden;
+}
+
+// Note list panel
+.note-list-panel {
+  border-right: 1px solid #dee2e6;
+  overflow-y: auto;
+  background: #fff;
+
+  &.hidden {
+    display: none;
+  }
+}
+
+// Note editor panel
+.note-editor-panel {
+  overflow-y: auto;
+  background: #fff;
+
+  &.hidden {
+    display: none;
+  }
+}
+
+.editor-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: none;
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #495057;
+
+  &:hover {
+    background: #e9ecef;
+  }
+
+  i {
+    font-size: 1rem;
+  }
+}
+
+.empty-editor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #6c757d;
+  padding: 2rem;
+  text-align: center;
+
+  i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
+  }
+
+  p {
+    margin: 0.5rem 0;
+    font-size: 1.125rem;
+
+    &.hint {
+      font-size: 0.875rem;
+      opacity: 0.7;
+    }
+  }
+}
+
+// Tablet breakpoint
+@media (max-width: 1024px) {
+  .main-content {
+    grid-template-columns: 350px 1fr;
+  }
+
+  .sidebar {
+    width: 280px;
+  }
+}
+
+// Mobile breakpoint
+@media (max-width: 768px) {
+  .main-content {
+    grid-template-columns: 1fr;
+  }
+
+  .note-list-panel,
+  .note-editor-panel {
+    width: 100%;
+  }
+}

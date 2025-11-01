@@ -1,0 +1,63 @@
+<div class="notes-app">
+  <!-- Header -->
+  <app-header
+    [sidebarVisible]="sidebarVisible()"
+    (toggleSidebar)="toggleSidebar()">
+  </app-header>
+
+  <div class="notes-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" [class.visible]="sidebarVisible()" [class.mobile]="isMobileView()">
+      <app-sidebar
+        (folderSelected)="onFolderSelected($event)"
+        (newFolderClick)="onNewFolderClick()">
+      </app-sidebar>
+    </aside>
+
+    <!-- Main content area -->
+    <main class="main-content">
+      <!-- Note List (desktop: always visible, mobile: conditional) -->
+      <div class="note-list-panel"
+           [class.hidden]="isMobileView() && !showNoteList()">
+        <app-note-list
+          [folderId]="selectedFolderId()"
+          (noteSelected)="onNoteSelected($event)"
+          (newNoteClick)="onNewNoteClick()">
+        </app-note-list>
+      </div>
+
+      <!-- Note Editor (desktop: always visible, mobile: conditional) -->
+      <div class="note-editor-panel"
+           [class.hidden]="isMobileView() && showNoteList()">
+        @if (selectedNoteId() || !isMobileView()) {
+          <div class="editor-container">
+            <!-- Back button for mobile -->
+            @if (isMobileView()) {
+              <button class="back-button" (click)="backToList()">
+                <i class="pi pi-arrow-left"></i> Back to Notes
+              </button>
+            }
+
+            <app-note-editor
+              [noteId]="selectedNoteId()"
+              (noteSaved)="onNoteSaved($event)">
+            </app-note-editor>
+
+            @if (selectedNoteId() && currentNote()) {
+              <app-attachments
+                [noteId]="selectedNoteId()!"
+                [attachments]="currentNote()!.attachments || []">
+              </app-attachments>
+            }
+          </div>
+        } @else {
+          <div class="empty-editor">
+            <i class="pi pi-file"></i>
+            <p>Select a note to view or edit</p>
+            <p class="hint">Or create a new note to get started</p>
+          </div>
+        }
+      </div>
+    </main>
+  </div>
+</div>

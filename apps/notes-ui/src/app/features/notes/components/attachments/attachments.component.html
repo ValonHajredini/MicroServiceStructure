@@ -1,0 +1,69 @@
+<div class="attachments">
+  <div class="attachments-header">
+    <h4>
+      <i class="pi pi-paperclip"></i>
+      Attachments
+      @if (attachments().length > 0) {
+        <span class="attachment-count">({{ attachments().length }})</span>
+      }
+    </h4>
+    <!-- Placeholder for upload functionality (Story 3.8) -->
+    <p-button
+      icon="pi pi-upload"
+      label="Upload"
+      [text]="true"
+      size="small"
+      [disabled]="true"
+      pTooltip="Upload feature coming in Story 3.8">
+    </p-button>
+  </div>
+
+  <div class="attachments-list">
+    @if (attachments().length === 0) {
+      <div class="empty-state">
+        <i class="pi pi-paperclip"></i>
+        <p>No attachments</p>
+      </div>
+    } @else {
+      @for (attachment of attachments(); track attachment.id) {
+        <div class="attachment-item" [class.deleting]="isDeleting(attachment.id)">
+          <div class="attachment-icon">
+            <i [class]="getFileIcon(attachment.mime_type)"></i>
+          </div>
+          <div class="attachment-info">
+            <div class="attachment-name">{{ attachment.filename }}</div>
+            <div class="attachment-meta">
+              <span class="file-size">{{ attachment.file_size | fileSize }}</span>
+            </div>
+          </div>
+          <div class="attachment-actions">
+            @if (isDeleting(attachment.id)) {
+              <i class="pi pi-spin pi-spinner"></i>
+            } @else {
+              <p-button
+                icon="pi pi-download"
+                (onClick)="downloadAttachment(attachment)"
+                [text]="true"
+                [rounded]="true"
+                severity="secondary"
+                size="small"
+                pTooltip="Download">
+              </p-button>
+              <p-button
+                icon="pi pi-trash"
+                (onClick)="removeAttachment(attachment)"
+                [text]="true"
+                [rounded]="true"
+                severity="danger"
+                size="small"
+                pTooltip="Remove">
+              </p-button>
+            }
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>
+
+<p-confirmDialog></p-confirmDialog>

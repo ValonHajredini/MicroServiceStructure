@@ -1,0 +1,59 @@
+<div class="note-editor">
+  @if (loading()) {
+    <div class="editor-loading">
+      <i class="pi pi-spin pi-spinner"></i>
+      <span>Loading note...</span>
+    </div>
+  } @else {
+    <div class="editor-header">
+      <div class="editor-title-section">
+        <input
+          type="text"
+          pInputText
+          class="title-input"
+          [value]="note().title || ''"
+          (input)="updateTitle($event)"
+          placeholder="Untitled"
+          [disabled]="isSaving()" />
+      </div>
+
+      <div class="editor-actions">
+        <span class="save-status" [class.error]="error()">
+          @if (isSaving()) {
+            <i class="pi pi-spin pi-spinner"></i>
+          } @else if (isDirty()) {
+            <i class="pi pi-circle-fill dirty-indicator"></i>
+          } @else {
+            <i class="pi pi-check-circle"></i>
+          }
+          {{ saveStatus() }}
+        </span>
+        <p-button
+          label="Save"
+          icon="pi pi-save"
+          (onClick)="manualSave()"
+          [disabled]="isSaving() || !isDirty()"
+          [text]="true"
+          size="small">
+        </p-button>
+      </div>
+    </div>
+
+    <div class="editor-content">
+      @if (error()) {
+        <div class="error-banner">
+          <i class="pi pi-exclamation-triangle"></i>
+          <span>{{ error() }}</span>
+        </div>
+      }
+
+      <p-editor
+        [ngModel]="note().content"
+        (onTextChange)="updateContent($event)"
+        [style]="{'height': '400px'}"
+        [modules]="editorModules"
+        placeholder="Start writing...">
+      </p-editor>
+    </div>
+  }
+</div>

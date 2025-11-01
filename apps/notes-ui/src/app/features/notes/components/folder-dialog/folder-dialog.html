@@ -1,0 +1,48 @@
+<p-dialog
+  [header]="getDialogHeader()"
+  [visible]="visible()"
+  (onHide)="onHide()"
+  [modal]="true"
+  [style]="{ width: '450px' }">
+
+  <div class="dialog-content">
+    <div class="field">
+      <label for="folderName">Folder Name</label>
+      <input
+        pInputText
+        id="folderName"
+        [(ngModel)]="folderName"
+        placeholder="Enter folder name"
+        class="w-full"
+        autofocus />
+    </div>
+
+    @if (mode() === 'create') {
+      <div class="field">
+        <label for="parentFolder">Parent Folder (Optional)</label>
+        <p-select
+          [(ngModel)]="parentId"
+          [options]="folders()"
+          optionLabel="name"
+          optionValue="id"
+          placeholder="Select parent folder"
+          [showClear]="true"
+          class="w-full">
+        </p-select>
+      </div>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancel"
+      (onClick)="onHide()"
+      [text]="true"
+      severity="secondary" />
+    <p-button
+      [label]="mode() === 'create' ? 'Create' : 'Rename'"
+      (onClick)="onSave()"
+      [loading]="loading()"
+      [disabled]="!folderName().trim()" />
+  </ng-template>
+</p-dialog>

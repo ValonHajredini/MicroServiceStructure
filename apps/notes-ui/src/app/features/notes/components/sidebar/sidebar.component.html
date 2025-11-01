@@ -1,0 +1,45 @@
+<div class="sidebar" [class.visible]="isVisible()">
+  <div class="sidebar-header">
+    <h3>Folders</h3>
+    <p-button
+      icon="pi pi-plus"
+      label="New Folder"
+      (onClick)="onNewFolderClick()"
+      [text]="true"
+      size="small">
+    </p-button>
+  </div>
+
+  <div class="sidebar-content">
+    @if (loading()) {
+      <div class="loading-skeleton">
+        <i class="pi pi-spin pi-spinner"></i>
+        <span>Loading folders...</span>
+      </div>
+    } @else {
+      <p-tree
+        [value]="folderTree()"
+        selectionMode="single"
+        [(selection)]="selectedFolder"
+        (onNodeSelect)="onNodeSelect($event)"
+        (onNodeContextMenuSelect)="onNodeContextMenu($event)"
+        [contextMenu]="cm"
+        [filter]="false"
+        styleClass="folder-tree">
+      </p-tree>
+
+      <p-contextMenu #cm [model]="contextMenuItems()"></p-contextMenu>
+    }
+  </div>
+</div>
+
+<p-confirmDialog></p-confirmDialog>
+
+<app-folder-dialog
+  [visible]="folderDialogVisible()"
+  [mode]="folderDialogMode()"
+  [folder]="selectedFolderForEdit()"
+  [folders]="allFolders()"
+  (closed)="onFolderDialogClosed()"
+  (saved)="onFolderSaved($event)">
+</app-folder-dialog>

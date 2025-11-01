@@ -1,0 +1,29 @@
+<header class="app-header">
+  <div class="header-left">
+    <button class="menu-toggle" (click)="onMenuToggle()">
+      <i class="pi pi-bars"></i>
+    </button>
+    <div class="app-logo">
+      <i class="pi pi-book"></i>
+      <span class="app-title">Notes</span>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <div class="user-menu">
+      <p-button
+        [label]="userEmail()"
+        icon="pi pi-user"
+        [text]="true"
+        (onClick)="userMenu.toggle($event)"
+        #userMenuButton>
+      </p-button>
+      <p-menu
+        #userMenu
+        [model]="userMenuItems()"
+        [popup]="true"
+        appendTo="body">
+      </p-menu>
+    </div>
+  </div>
+</header>

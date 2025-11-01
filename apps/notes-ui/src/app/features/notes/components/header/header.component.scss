@@ -1,0 +1,101 @@
+.app-header {
+  height: 60px;
+  background: #1976d2;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    .menu-toggle {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0.5rem;
+      display: none;
+      transition: opacity 0.2s;
+
+      &:hover {
+        opacity: 0.8;
+      }
+
+      i {
+        display: block;
+      }
+    }
+
+    .app-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+
+      i {
+        font-size: 1.5rem;
+      }
+
+      .app-title {
+        font-weight: 600;
+      }
+    }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+
+    .user-menu {
+      ::ng-deep .p-button {
+        color: #fff;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.1);
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .app-header {
+    .header-left {
+      .menu-toggle {
+        display: block;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .app-header {
+    padding: 0 0.5rem;
+
+    .header-left {
+      .app-logo {
+        font-size: 1rem;
+
+        i {
+          font-size: 1.25rem;
+        }
+      }
+    }
+
+    .header-right {
+      .user-menu {
+        ::ng-deep .p-button .p-button-label {
+          display: none;
+        }
+      }
+    }
+  }
+}
