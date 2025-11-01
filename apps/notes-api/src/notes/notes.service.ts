@@ -13,6 +13,7 @@ import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
 import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import { FilesClientService } from '../files/files-client.service';
+import { SearchResultDto, SearchResponse } from './dto/search-result.dto';
 
 export interface PaginationOptions {
   page?: number;
@@ -28,6 +29,11 @@ export interface PaginatedResult<T> {
     total: number;
     totalPages: number;
   };
+}
+
+export interface SearchOptions {
+  page?: number;
+  limit?: number;
 }
 
 /**
@@ -292,6 +298,111 @@ export class NotesService {
       { note_id: id },
       { deleted_at: new Date() },
     );
+  }
+
+  /**
+   * Full-text search notes
+   * Story 3.5 - Tasks 1, 4-11
+   * AC: 1-7 - PostgreSQL full-text search with ranking, snippets, and pagination
+   *
+   * @param query - Search query string
+   * @param tenantId - Tenant ID for filtering
+   * @param options - Pagination options
+   * @returns Paginated search results with snippets and relevance scores
+   */
+  async search(
+    query: string,
+    tenantId: string,
+    options: SearchOptions,
+  ): Promise<SearchResponse> {
+    const { page = 1, limit = 20 } = options;
+
+    // Task 10: Query Sanitization
+    // Trim whitespace and validate query
+    const sanitizedQuery = query.trim().replace(/\s+/g, ' ');
+
+    if (!sanitizedQuery || sanitizedQuery.length < 1) {
+      throw new BadRequestException('Search query cannot be empty');
+    }
+
+    if (sanitizedQuery.length > 255) {
+      throw new BadRequestException(
+        'Search query too long (max 255 characters)',
+      );
+    }
+
+    // Check if query contains only special characters
+    if (!/[a-zA-Z0-9]/.test(sanitizedQuery)) {
+      throw new BadRequestException(
+        'Search query must contain alphanumeric characters',
+      );
+    }
+
+    // Enforce maximum limit (Task 8: Pagination)
+    const effectiveLimit = Math.min(limit, MAX_LIMIT);
+
+    // Task 7: Build Full-Text Search Query with TypeORM
+    // Task 4: PostgreSQL Full-Text Search
+    // Task 5: Result Ranking with ts_rank
+    // Task 6: Generate Search Snippets with ts_headline
+    const queryBuilder = this.notesRepo
+      .createQueryBuilder('note')
+      .where('note.tenant_id = :tenantId', { tenantId })
+      .andWhere('note.deleted_at IS NULL')
+      .andWhere(
+        "to_tsvector('english', note.title || ' ' || COALESCE(note.content, '')) @@ plainto_tsquery('english', :query)",
+        { query: sanitizedQuery },
+      );
+
+    // Add rank calculation (Task 5: Result Ranking)
+    queryBuilder
+      .addSelect(
+        "ts_rank(to_tsvector('english', note.title || ' ' || COALESCE(note.content, '')), plainto_tsquery('english', :query))",
+        'rank',
+      )
+      // Add snippet generation (Task 6: Generate Search Snippets)
+      .addSelect(
+        "ts_headline('english', COALESCE(note.content, ''), plainto_tsquery('english', :query), 'MaxWords=50, MinWords=20, ShortWord=3, HighlightAll=FALSE')",
+        'snippet',
+      )
+      // Order by relevance (rank DESC), then by updated_at DESC
+      .orderBy('rank', 'DESC')
+      .addOrderBy('note.updated_at', 'DESC');
+
+    // Get total count for pagination (Task 8)
+    const countQuery = queryBuilder.clone();
+    const total = await countQuery.getCount();
+
+    // Apply pagination (Task 8)
+    const results = await queryBuilder
+      .skip((page - 1) * effectiveLimit)
+      .take(effectiveLimit)
+      .getRawAndEntities();
+
+    // Task 9: Handle Edge Cases - Build search results
+    const searchResults: SearchResultDto[] = results.entities.map(
+      (note, index) => ({
+        id: note.id,
+        title: note.title,
+        snippet: results.raw[index].snippet || '',
+        rank: parseFloat(results.raw[index].rank) || 0,
+        folder_id: note.folder_id,
+        is_pinned: note.is_pinned,
+        updated_at: note.updated_at,
+      }),
+    );
+
+    // Task 8: Return paginated response
+    return {
+      data: searchResults,
+      meta: {
+        query: sanitizedQuery,
+        page,
+        limit: effectiveLimit,
+        total,
+        totalPages: Math.ceil(total / effectiveLimit),
+      },
+    };
   }
 
   /**

@@ -18,6 +18,7 @@ import { AttachmentsService } from './attachments.service';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
 import { CreateAttachmentDto } from './dto/create-attachment.dto';
+import { SearchNotesDto } from './dto/search-notes.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
@@ -52,6 +53,23 @@ export class NotesController {
     @CurrentUser() user: JwtPayload,
   ) {
     return this.notesService.create(createNoteDto, user);
+  }
+
+  /**
+   * GET /api/v1/notes/search
+   * Full-text search notes by title and content
+   * Story 3.5 - Task 3
+   * AC: 1, 3, 4, 6 - Search with pagination, tenant-scoped, exclude deleted
+   */
+  @Get('search')
+  async search(
+    @Query() searchDto: SearchNotesDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.notesService.search(searchDto.q, user.tenantId, {
+      page: searchDto.page,
+      limit: searchDto.limit,
+    });
   }
 
   /**

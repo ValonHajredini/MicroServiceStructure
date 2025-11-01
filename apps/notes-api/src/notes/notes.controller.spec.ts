@@ -34,6 +34,7 @@ describe('NotesController', () => {
     findOne: jest.fn(),
     update: jest.fn(),
     softDelete: jest.fn(),
+    search: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -172,6 +173,86 @@ describe('NotesController', () => {
 
       expect(result).toEqual({ message: 'Note deleted successfully' });
       expect(service.softDelete).toHaveBeenCalledWith('note-001', mockUser);
+    });
+  });
+
+  describe('search', () => {
+    // Story 3.5 - Task 12: Controller unit tests for search endpoint
+
+    const mockSearchResponse = {
+      data: [
+        {
+          id: 'note-001',
+          title: 'Project Requirements',
+          snippet: '...detailed <mark>requirements</mark>...',
+          rank: 0.9,
+          folder_id: 'folder-001',
+          is_pinned: false,
+          updated_at: new Date('2025-10-29T10:00:00Z'),
+        },
+      ],
+      meta: {
+        query: 'requirements',
+        page: 1,
+        limit: 20,
+        total: 1,
+        totalPages: 1,
+      },
+    };
+
+    it('should return search results (response formatting handled by interceptor)', async () => {
+      const searchDto = { q: 'requirements', page: 1, limit: 20 };
+      mockNotesService.search.mockResolvedValue(mockSearchResponse);
+
+      const result = await controller.search(searchDto, mockUser);
+
+      expect(result).toBe(mockSearchResponse as any);
+      expect(service.search).toHaveBeenCalledWith('requirements', 'tenant-001', {
+        page: 1,
+        limit: 20,
+      });
+    });
+
+    it('should use default pagination for search', async () => {
+      const searchDto = { q: 'test' };
+      mockNotesService.search.mockResolvedValue({
+        data: [],
+        meta: { query: 'test', page: 1, limit: 20, total: 0, totalPages: 0 },
+      });
+
+      await controller.search(searchDto as any, mockUser);
+
+      expect(service.search).toHaveBeenCalledWith('test', 'tenant-001', {
+        page: undefined,
+        limit: undefined,
+      });
+    });
+
+    it('should pass custom pagination to search', async () => {
+      const searchDto = { q: 'test', page: 2, limit: 50 };
+      mockNotesService.search.mockResolvedValue({
+        data: [],
+        meta: { query: 'test', page: 2, limit: 50, total: 0, totalPages: 0 },
+      });
+
+      await controller.search(searchDto, mockUser);
+
+      expect(service.search).toHaveBeenCalledWith('test', 'tenant-001', {
+        page: 2,
+        limit: 50,
+      });
+    });
+
+    it('should extract tenantId from JWT', async () => {
+      const searchDto = { q: 'requirements', page: 1, limit: 20 };
+      mockNotesService.search.mockResolvedValue(mockSearchResponse);
+
+      await controller.search(searchDto, mockUser);
+
+      const callArgs = (service.search as jest.Mock).mock.calls[0];
+      expect(callArgs[0]).toBe('requirements');
+      expect(callArgs[1]).toBe('tenant-001');
+      expect(callArgs[2]).toBeDefined();
     });
   });
 });

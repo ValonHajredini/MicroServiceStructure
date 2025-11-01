@@ -296,4 +296,290 @@ describe('Notes API (e2e)', () => {
         .expect(400);
     });
   });
+
+  describe('Full-Text Search (Story 3.5)', () => {
+    beforeEach(async () => {
+      // Create test notes with various content
+      await request(app.getHttpServer())
+        .post('/api/v1/notes')
+        .set('Authorization', tenant1Token)
+        .send({
+          title: 'Project Requirements Document',
+          content: 'This document contains detailed requirements for the new project including functional and non-functional requirements.',
+        })
+        .expect(201);
+
+      await request(app.getHttpServer())
+        .post('/api/v1/notes')
+        .set('Authorization', tenant1Token)
+        .send({
+          title: 'Meeting Notes',
+          content: 'Discussed the project requirements with the team. Need to finalize the technical specifications.',
+        })
+        .expect(201);
+
+      await request(app.getHttpServer())
+        .post('/api/v1/notes')
+        .set('Authorization', tenant1Token)
+        .send({
+          title: 'Shopping List',
+          content: 'Milk, bread, eggs, coffee, and some vegetables.',
+        })
+        .expect(201);
+
+      // Create note for tenant 2
+      await request(app.getHttpServer())
+        .post('/api/v1/notes')
+        .set('Authorization', tenant2Token)
+        .send({
+          title: 'Project Requirements',
+          content: 'Tenant 2 requirements document.',
+        })
+        .expect(201);
+    });
+
+    it('should search notes by title match', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/v1/notes/search')
+        .query({ q: 'requirements' })
+        .set('Authorization', tenant1Token)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.length).toBe(2);
+      expect(response.body.data[0].title).toContain('Requirements');
+      expect(response.body.meta.query).toBe('requirements');
+      expect(response.body.meta.total).toBe(2);
+    });
+
+    it('should search notes by content match', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/v1/notes/search')
+        .query({ q: 'project' })
+        .set('Authorization', tenant1Token)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.length).toBe(2);
+      expect(response.body.meta.total).toBe(2);
+    });
+
+    it('should handle multi-word queries with AND logic', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/v1/notes/search')
+        .query({ q: 'project requirements' })
+        .set('Authorization', tenant1Token)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.length).toBe(2);
+      // Should only match notes containing BOTH words
+    });
+
+    it('should return results ordered by relevance', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/v1/notes/search')
+        .query({ q: 'requirements' })
+        .set('Authorization', tenant1Token)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      const ranks = response.body.data.map((note) => note.rank);
+      // Verify ranks are in descending order
+      for (let i = 1; i < ranks.length; i++) {
+        expect(ranks[i - 1]).toBeGreaterThanOrEqual(ranks[i]);
+      }
+    });
+
+    it('should generate highlighted snippets', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/v1/notes/search')
+        .query({ q: 'requirements' })
+        .set('Authorization', tenant1Token)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      const snippets = response.body.data.map((note) => note.snippet);
+      // At least one snippet should contain highlighting
+      const hasHighlight = snippets.some((snippet) => snippet.includes('<mark>') || snippet.includes('<b>'));
+      expect(hasHighlight).toBe(true);
+    });
+
+    it('should filter search results by tenant_id', async () => {
+      const tenant1Response = await request(app.getHttpServer())
+        .get('/api/v1/notes/search')
+        .query({ q: 'requirements' })
+        .set('Authorization', tenant1Token)
+        .expect(200);
+
+      const tenant2Response = await request(app.getHttpServer())
+        .get('/api/v1/notes/search')
+        .query({ q: 'requirements' })
+        .set('Authorization', tenant2Token)
+        .expect(200);
+
+      // Tenant 1 should have 2 matches
+      expect(tenant1Response.body.data.length).toBe(2);
+      // Tenant 2 should have 1 match
+      expect(tenant2Response.body.data.length).toBe(1);
+
+      // Ensure no cross-tenant results
+      tenant1Response.body.data.forEach((note) => {
+        expect(note.title).not.toContain('Tenant 2');
+      });
+    });
+
+    it('should exclude deleted notes from search results', async () => {
+      // Create a note and delete it
+      const createResponse = await request(app.getHttpServer())
+        .post('/api/v1/notes')
+        .set('Authorization', tenant1Token)
+        .send({
+          title: 'Deleted Requirements Note',
+          content: 'This will be deleted.',
+        })
+        .expect(201);
+
+      const noteId = createResponse.body.data.id;
+
+      // Verify it appears in search
+      let searchResponse = await request(app.getHttpServer())
+        .get('/api/v1/notes/search')
+        .query({ q: 'deleted requirements' })
+        .set('Authorization', tenant1Token)
+        .expect(200);
+
+      expect(searchResponse.body.data.length).toBeGreaterThan(0);
+
+      // Delete the note
+      await request(app.getHttpServer())
+        .delete(`/api/v1/notes/${noteId}`)
+        .set('Authorization', tenant1Token)
+        .expect(200);
+
+      // Verify it no longer appears in search
+      searchResponse = await request(app.getHttpServer())
+        .get('/api/v1/notes/search')
+        .query({ q: 'deleted requirements' })
+        .set('Authorization', tenant1Token)
+        .expect(200);
+
+      const deletedNoteInResults = searchResponse.body.data.find((note) => note.id === noteId);
+      expect(deletedNoteInResults).toBeUndefined();
+    });
+
+    it('should handle pagination correctly', async () => {
+      // Page 1 with limit 2
+      const page1Response = await request(app.getHttpServer())
+        .get('/api/v1/notes/search')
+        .query({ q: 'project requirements', page: 1, limit: 2 })
+        .set('Authorization', tenant1Token)
+        .expect(200);
+
+      expect(page1Response.body.data.length).toBeLessThanOrEqual(2);
+      expect(page1Response.body.meta.page).toBe(1);
+      expect(page1Response.body.meta.limit).toBe(2);
+      expect(page1Response.body.meta.totalPages).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should reject empty search query', async () => {
+      await request(app.getHttpServer())
+        .get('/api/v1/notes/search')
+        .query({ q: '' })
+        .set('Authorization', tenant1Token)
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .get('/api/v1/notes/search')
+        .query({ q: '   ' })
+        .set('Authorization', tenant1Token)
+        .expect(400);
+    });
+
+    it('should reject query with only special characters', async () => {
+      await request(app.getHttpServer())
+        .get('/api/v1/notes/search')
+        .query({ q: '!!!@@@###' })
+        .set('Authorization', tenant1Token)
+        .expect(400);
+    });
+
+    it('should reject query longer than 255 characters', async () => {
+      const longQuery = 'a'.repeat(256);
+
+      await request(app.getHttpServer())
+        .get('/api/v1/notes/search')
+        .query({ q: longQuery })
+        .set('Authorization', tenant1Token)
+        .expect(400);
+    });
+
+    it('should return empty array when no matches found', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/v1/notes/search')
+        .query({ q: 'nonexistentterm12345' })
+        .set('Authorization', tenant1Token)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toEqual([]);
+      expect(response.body.meta.total).toBe(0);
+      expect(response.body.meta.totalPages).toBe(0);
+    });
+
+    it('should sanitize query by trimming whitespace', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/v1/notes/search')
+        .query({ q: '  project    requirements  ' })
+        .set('Authorization', tenant1Token)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.meta.query).toBe('project requirements');
+    });
+
+    it('should enforce maximum limit of 100', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/v1/notes/search')
+        .query({ q: 'project', limit: 200 })
+        .set('Authorization', tenant1Token)
+        .expect(200);
+
+      expect(response.body.meta.limit).toBe(100);
+    });
+
+    it('should include rank score in results', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/v1/notes/search')
+        .query({ q: 'requirements' })
+        .set('Authorization', tenant1Token)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      response.body.data.forEach((note) => {
+        expect(note.rank).toBeDefined();
+        expect(typeof note.rank).toBe('number');
+        expect(note.rank).toBeGreaterThan(0);
+      });
+    });
+
+    it('should include all required fields in search results', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/v1/notes/search')
+        .query({ q: 'project' })
+        .set('Authorization', tenant1Token)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      response.body.data.forEach((note) => {
+        expect(note.id).toBeDefined();
+        expect(note.title).toBeDefined();
+        expect(note.snippet).toBeDefined();
+        expect(note.rank).toBeDefined();
+        expect(note).toHaveProperty('folder_id');
+        expect(note.is_pinned).toBeDefined();
+        expect(note.updated_at).toBeDefined();
+      });
+    });
+  });
 });

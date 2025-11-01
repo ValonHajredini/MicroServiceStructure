@@ -279,4 +279,374 @@ describe('NotesService', () => {
       expect(result).toBe(false);
     });
   });
+
+  describe('search', () => {
+    // Story 3.5 - Task 12: Unit tests for full-text search
+
+    const mockSearchResults = {
+      entities: [
+        {
+          id: 'note-001',
+          title: 'Project Requirements',
+          content: 'Detailed requirements for the project',
+          folder_id: 'folder-001',
+          is_pinned: false,
+          updated_at: new Date('2025-10-29T10:00:00Z'),
+        },
+        {
+          id: 'note-002',
+          title: 'Meeting Notes',
+          content: 'Discussed project requirements',
+          folder_id: null,
+          is_pinned: true,
+          updated_at: new Date('2025-10-28T15:30:00Z'),
+        },
+      ],
+      raw: [
+        { snippet: '...detailed <mark>requirements</mark>...', rank: '0.9' },
+        { snippet: '...project <mark>requirements</mark>...', rank: '0.6' },
+      ],
+    };
+
+    beforeEach(() => {
+      // Reset mocks
+      jest.clearAllMocks();
+    });
+
+    it('should return relevant search results', async () => {
+      const mockQueryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis(),
+        clone: jest.fn().mockReturnThis(),
+        getCount: jest.fn().mockResolvedValue(2),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getRawAndEntities: jest.fn().mockResolvedValue(mockSearchResults),
+      };
+
+      jest
+        .spyOn(notesRepo, 'createQueryBuilder')
+        .mockReturnValue(mockQueryBuilder as any);
+
+      const result = await service.search('requirements', 'tenant-001', {
+        page: 1,
+        limit: 20,
+      });
+
+      expect(result.data.length).toBe(2);
+      expect(result.data[0].title).toBe('Project Requirements');
+      expect(result.data[0].snippet).toContain('<mark>');
+      expect(result.data[0].rank).toBe(0.9);
+      expect(result.meta.total).toBe(2);
+      expect(result.meta.query).toBe('requirements');
+    });
+
+    it('should filter by tenant_id', async () => {
+      const mockQueryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis(),
+        clone: jest.fn().mockReturnThis(),
+        getCount: jest.fn().mockResolvedValue(0),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getRawAndEntities: jest
+          .fn()
+          .mockResolvedValue({ entities: [], raw: [] }),
+      };
+
+      jest
+        .spyOn(notesRepo, 'createQueryBuilder')
+        .mockReturnValue(mockQueryBuilder as any);
+
+      await service.search('test', 'tenant-001', { page: 1, limit: 20 });
+
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
+        'note.tenant_id = :tenantId',
+        { tenantId: 'tenant-001' },
+      );
+    });
+
+    it('should exclude deleted notes', async () => {
+      const mockQueryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis(),
+        clone: jest.fn().mockReturnThis(),
+        getCount: jest.fn().mockResolvedValue(0),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getRawAndEntities: jest
+          .fn()
+          .mockResolvedValue({ entities: [], raw: [] }),
+      };
+
+      jest
+        .spyOn(notesRepo, 'createQueryBuilder')
+        .mockReturnValue(mockQueryBuilder as any);
+
+      await service.search('test', 'tenant-001', { page: 1, limit: 20 });
+
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'note.deleted_at IS NULL',
+      );
+    });
+
+    it('should handle multi-word queries', async () => {
+      const mockQueryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis(),
+        clone: jest.fn().mockReturnThis(),
+        getCount: jest.fn().mockResolvedValue(1),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getRawAndEntities: jest.fn().mockResolvedValue({
+          entities: [mockSearchResults.entities[0]],
+          raw: [mockSearchResults.raw[0]],
+        }),
+      };
+
+      jest
+        .spyOn(notesRepo, 'createQueryBuilder')
+        .mockReturnValue(mockQueryBuilder as any);
+
+      const result = await service.search('project requirements', 'tenant-001', {
+        page: 1,
+        limit: 20,
+      });
+
+      expect(result.meta.query).toBe('project requirements');
+      const andWhereCall = (mockQueryBuilder.andWhere as jest.Mock).mock.calls.find(
+        call => call[0] && typeof call[0] === 'string' && call[0].includes('plainto_tsquery')
+      );
+      expect(andWhereCall).toBeDefined();
+      expect(andWhereCall[1]).toEqual({ query: 'project requirements' });
+    });
+
+    it('should order results by relevance', async () => {
+      const mockQueryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis(),
+        clone: jest.fn().mockReturnThis(),
+        getCount: jest.fn().mockResolvedValue(2),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getRawAndEntities: jest.fn().mockResolvedValue(mockSearchResults),
+      };
+
+      jest
+        .spyOn(notesRepo, 'createQueryBuilder')
+        .mockReturnValue(mockQueryBuilder as any);
+
+      await service.search('requirements', 'tenant-001', {
+        page: 1,
+        limit: 20,
+      });
+
+      expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith('rank', 'DESC');
+      expect(mockQueryBuilder.addOrderBy).toHaveBeenCalledWith(
+        'note.updated_at',
+        'DESC',
+      );
+    });
+
+    it('should handle pagination correctly', async () => {
+      const mockQueryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis(),
+        clone: jest.fn().mockReturnThis(),
+        getCount: jest.fn().mockResolvedValue(45),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getRawAndEntities: jest.fn().mockResolvedValue(mockSearchResults),
+      };
+
+      jest
+        .spyOn(notesRepo, 'createQueryBuilder')
+        .mockReturnValue(mockQueryBuilder as any);
+
+      const result = await service.search('test', 'tenant-001', {
+        page: 2,
+        limit: 20,
+      });
+
+      expect(mockQueryBuilder.skip).toHaveBeenCalledWith(20);
+      expect(mockQueryBuilder.take).toHaveBeenCalledWith(20);
+      expect(result.meta.page).toBe(2);
+      expect(result.meta.limit).toBe(20);
+      expect(result.meta.total).toBe(45);
+      expect(result.meta.totalPages).toBe(3);
+    });
+
+    it('should generate snippets with highlights', async () => {
+      const mockQueryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis(),
+        clone: jest.fn().mockReturnThis(),
+        getCount: jest.fn().mockResolvedValue(1),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getRawAndEntities: jest.fn().mockResolvedValue({
+          entities: [mockSearchResults.entities[0]],
+          raw: [mockSearchResults.raw[0]],
+        }),
+      };
+
+      jest
+        .spyOn(notesRepo, 'createQueryBuilder')
+        .mockReturnValue(mockQueryBuilder as any);
+
+      const result = await service.search('requirements', 'tenant-001', {
+        page: 1,
+        limit: 20,
+      });
+
+      expect(result.data[0].snippet).toContain('<mark>');
+      const addSelectCall = (mockQueryBuilder.addSelect as jest.Mock).mock.calls.find(
+        call => call[0] && typeof call[0] === 'string' && call[0].includes('ts_headline')
+      );
+      expect(addSelectCall).toBeDefined();
+      expect(addSelectCall[1]).toBe('snippet');
+    });
+
+    it('should throw BadRequestException for empty query', async () => {
+      try {
+        await service.search('', 'tenant-001', { page: 1, limit: 20 });
+        fail('Should have thrown BadRequestException');
+      } catch (error) {
+        expect(error.message).toContain('Search query cannot be empty');
+      }
+
+      try {
+        await service.search('   ', 'tenant-001', { page: 1, limit: 20 });
+        fail('Should have thrown BadRequestException');
+      } catch (error) {
+        expect(error.message).toContain('Search query cannot be empty');
+      }
+    });
+
+    it('should throw BadRequestException for query too long', async () => {
+      const longQuery = 'a'.repeat(256);
+      try {
+        await service.search(longQuery, 'tenant-001', { page: 1, limit: 20 });
+        fail('Should have thrown BadRequestException');
+      } catch (error) {
+        expect(error.message).toContain('Search query too long');
+      }
+    });
+
+    it('should throw BadRequestException for special characters only', async () => {
+      try {
+        await service.search('!!!@@@###', 'tenant-001', { page: 1, limit: 20 });
+        fail('Should have thrown BadRequestException');
+      } catch (error) {
+        expect(error.message).toContain('Search query must contain alphanumeric characters');
+      }
+    });
+
+    it('should return empty array when no results found', async () => {
+      const mockQueryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis(),
+        clone: jest.fn().mockReturnThis(),
+        getCount: jest.fn().mockResolvedValue(0),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getRawAndEntities: jest
+          .fn()
+          .mockResolvedValue({ entities: [], raw: [] }),
+      };
+
+      jest
+        .spyOn(notesRepo, 'createQueryBuilder')
+        .mockReturnValue(mockQueryBuilder as any);
+
+      const result = await service.search('nonexistent', 'tenant-001', {
+        page: 1,
+        limit: 20,
+      });
+
+      expect(result.data).toEqual([]);
+      expect(result.meta.total).toBe(0);
+      expect(result.meta.totalPages).toBe(0);
+    });
+
+    it('should sanitize query by trimming and removing extra spaces', async () => {
+      const mockQueryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis(),
+        clone: jest.fn().mockReturnThis(),
+        getCount: jest.fn().mockResolvedValue(0),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getRawAndEntities: jest
+          .fn()
+          .mockResolvedValue({ entities: [], raw: [] }),
+      };
+
+      jest
+        .spyOn(notesRepo, 'createQueryBuilder')
+        .mockReturnValue(mockQueryBuilder as any);
+
+      const result = await service.search(
+        '  project    requirements  ',
+        'tenant-001',
+        { page: 1, limit: 20 },
+      );
+
+      expect(result.meta.query).toBe('project requirements');
+    });
+
+    it('should enforce maximum limit of 100', async () => {
+      const mockQueryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis(),
+        clone: jest.fn().mockReturnThis(),
+        getCount: jest.fn().mockResolvedValue(150),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getRawAndEntities: jest.fn().mockResolvedValue(mockSearchResults),
+      };
+
+      jest
+        .spyOn(notesRepo, 'createQueryBuilder')
+        .mockReturnValue(mockQueryBuilder as any);
+
+      const result = await service.search('test', 'tenant-001', {
+        page: 1,
+        limit: 200,
+      });
+
+      expect(mockQueryBuilder.take).toHaveBeenCalledWith(100);
+      expect(result.meta.limit).toBe(100);
+    });
+  });
 });
