@@ -12,7 +12,7 @@
     </div>
 
     <nav class="sidebar-nav">
-      <p-menu [model]="menuItems()" styleClass="sidebar-menu" />
+      <p-panelMenu [model]="menuItems()" styleClass="sidebar-menu" />
     </nav>
 
     <div class="sidebar-footer">
@@ -51,21 +51,36 @@
           <button
             pButton
             type="button"
-            (click)="userMenu.toggle($event)"
+            (click)="toggleUserMenu($event)"
             class="p-button-text user-menu-btn"
+            [class.menu-active]="userMenuVisible()"
           >
+            <span class="notification-badge">3</span>
             <p-avatar [label]="userInitials()" styleClass="avatar-gradient avatar-small" size="normal" />
             <span class="user-name-text">{{ userFullName() }}</span>
             <i class="pi pi-chevron-down"></i>
           </button>
-          <p-menu #userMenu [model]="userMenuItems()" [popup]="true" />
+          <p-menu
+            #userMenu
+            [model]="userMenuItems()"
+            [popup]="true"
+            styleClass="user-dropdown-menu"
+            appendTo="body"
+            [baseZIndex]="1100"
+            (onShow)="onMenuShow()"
+            (onHide)="onMenuHide()" />
         </div>
       </div>
     </header>
 
     <!-- Content Area -->
-    <main class="content-area">
+    <main class="content-area" [class.blurred]="userMenuVisible()">
       <ng-content></ng-content>
+
+      <!-- Backdrop overlay for menu blur - only on content -->
+      @if (userMenuVisible()) {
+        <div class="menu-backdrop" (click)="closeUserMenu()"></div>
+      }
     </main>
   </div>
 
@@ -88,6 +103,6 @@
         </div>
       </div>
     </div>
-    <p-menu [model]="menuItems()" styleClass="sidebar-menu" />
+    <p-panelMenu [model]="menuItems()" styleClass="sidebar-menu" />
   </p-drawer>
 </div>

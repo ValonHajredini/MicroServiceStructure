@@ -1,0 +1,283 @@
+<app-dashboard-layout>
+  <div class="demo-container">
+    <h1 class="demo-title">
+      <i class="pi pi-palette"></i>
+      PrimeNG Components Demo
+    </h1>
+    <p class="demo-subtitle">Comprehensive showcase of PrimeNG components</p>
+
+    <!-- Buttons & Icons -->
+    <p-card header="Buttons & Icons" styleClass="demo-card">
+      <div class="button-grid">
+        <p-button label="Primary" icon="pi pi-check" />
+        <p-button label="Secondary" icon="pi pi-times" severity="secondary" />
+        <p-button label="Success" icon="pi pi-check" severity="success" />
+        <p-button label="Info" icon="pi pi-info-circle" severity="info" />
+        <p-button label="Warn" icon="pi pi-exclamation-triangle" severity="warn" />
+        <p-button label="Danger" icon="pi pi-trash" severity="danger" />
+        <p-button label="Outlined" icon="pi pi-pencil" [outlined]="true" />
+        <p-button label="Text" icon="pi pi-user" [text]="true" />
+        <p-button icon="pi pi-search" styleClass="p-button-rounded" />
+        <p-button icon="pi pi-heart" styleClass="p-button-rounded" severity="danger" />
+      </div>
+
+      <div class="icon-showcase">
+        <h3>PrimeIcons</h3>
+        <div class="icon-grid">
+          <span><i class="pi pi-home"></i> pi-home</span>
+          <span><i class="pi pi-user"></i> pi-user</span>
+          <span><i class="pi pi-cog"></i> pi-cog</span>
+          <span><i class="pi pi-bell"></i> pi-bell</span>
+          <span><i class="pi pi-calendar"></i> pi-calendar</span>
+          <span><i class="pi pi-envelope"></i> pi-envelope</span>
+          <span><i class="pi pi-search"></i> pi-search</span>
+          <span><i class="pi pi-heart"></i> pi-heart</span>
+          <span><i class="pi pi-star"></i> pi-star</span>
+          <span><i class="pi pi-shopping-cart"></i> pi-shopping-cart</span>
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Form Inputs -->
+    <p-card header="Form Inputs" styleClass="demo-card">
+      <form (ngSubmit)="onSubmit()" class="demo-form">
+        <div class="form-grid">
+          <!-- Input Text with Float Label -->
+          <div class="form-field">
+            <p-floatlabel>
+              <input pInputText id="username" [(ngModel)]="username" name="username" />
+              <label for="username">Username</label>
+            </p-floatlabel>
+          </div>
+
+          <!-- Email Input -->
+          <div class="form-field">
+            <p-floatlabel>
+              <input pInputText id="email" type="email" [(ngModel)]="email" name="email" />
+              <label for="email">Email</label>
+            </p-floatlabel>
+          </div>
+
+          <!-- Password -->
+          <div class="form-field">
+            <p-floatlabel>
+              <p-password 
+                [(ngModel)]="password" 
+                name="password" 
+                [toggleMask]="true"
+                [feedback]="false"
+              />
+              <label for="password">Password</label>
+            </p-floatlabel>
+          </div>
+
+          <!-- Select/Dropdown -->
+          <div class="form-field">
+            <p-floatlabel>
+              <p-select 
+                [(ngModel)]="selectedCity" 
+                [options]="cities" 
+                optionLabel="name"
+                name="city"
+                styleClass="w-full"
+              />
+              <label for="city">Select City</label>
+            </p-floatlabel>
+          </div>
+        </div>
+
+        <!-- Textarea -->
+        <div class="form-field">
+          <p-floatlabel>
+            <textarea 
+              pTextarea 
+              [(ngModel)]="description" 
+              name="description" 
+              rows="4"
+              class="w-full"
+            ></textarea>
+            <label for="description">Description</label>
+          </p-floatlabel>
+        </div>
+
+        <!-- Checkboxes -->
+        <div class="form-field">
+          <p-checkbox 
+            [(ngModel)]="agreeTerms" 
+            [binary]="true" 
+            inputId="terms"
+            name="terms"
+          />
+          <label for="terms" class="ml-2">I agree to the terms and conditions</label>
+        </div>
+
+        <!-- Radio Buttons -->
+        <div class="form-field">
+          <label class="form-label">Select an option:</label>
+          <div class="radio-group">
+            <div class="radio-item">
+              <p-radiobutton 
+                name="option" 
+                value="option1" 
+                [(ngModel)]="selectedOption" 
+                inputId="option1"
+              />
+              <label for="option1" class="ml-2">Option 1</label>
+            </div>
+            <div class="radio-item">
+              <p-radiobutton 
+                name="option" 
+                value="option2" 
+                [(ngModel)]="selectedOption" 
+                inputId="option2"
+              />
+              <label for="option2" class="ml-2">Option 2</label>
+            </div>
+            <div class="radio-item">
+              <p-radiobutton 
+                name="option" 
+                value="option3" 
+                [(ngModel)]="selectedOption" 
+                inputId="option3"
+              />
+              <label for="option3" class="ml-2">Option 3</label>
+            </div>
+          </div>
+        </div>
+
+        <p-button label="Submit Form" icon="pi pi-check" type="submit" />
+      </form>
+    </p-card>
+
+    <!-- Badges, Chips & Tags -->
+    <p-card header="Badges, Chips & Tags" styleClass="demo-card">
+      <div class="badge-showcase">
+        <h3>Badges</h3>
+        <div class="badge-grid">
+          <p-button label="Messages" icon="pi pi-envelope" badge="8" />
+          <p-button label="Notifications" icon="pi pi-bell" badge="3" badgeSeverity="warn" />
+          <p-button label="Cart" icon="pi pi-shopping-cart" badge="5" badgeSeverity="danger" />
+        </div>
+
+        <h3>Chips</h3>
+        <div class="chip-grid">
+          <p-chip label="Apple" icon="pi pi-apple" />
+          <p-chip label="Facebook" icon="pi pi-facebook" />
+          <p-chip label="Google" icon="pi pi-google" />
+          <p-chip label="Microsoft" icon="pi pi-microsoft" />
+        </div>
+
+        <h3>Tags</h3>
+        <div class="tag-grid">
+          <p-tag value="Primary" />
+          <p-tag value="Success" severity="success" />
+          <p-tag value="Info" severity="info" />
+          <p-tag value="Warning" severity="warn" />
+          <p-tag value="Danger" severity="danger" />
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Avatars -->
+    <p-card header="Avatars" styleClass="demo-card">
+      <div class="avatar-grid">
+        <p-avatar label="JD" size="xlarge" styleClass="avatar-blue" />
+        <p-avatar label="AS" size="large" styleClass="avatar-purple" />
+        <p-avatar label="MK" size="normal" styleClass="avatar-green" />
+        <p-avatar icon="pi pi-user" size="large" styleClass="avatar-orange" />
+        <p-avatar icon="pi pi-star" size="large" styleClass="avatar-pink" />
+      </div>
+    </p-card>
+
+    <!-- Messages -->
+    <p-card header="Messages" styleClass="demo-card">
+      <div class="message-grid">
+        <p-message severity="success" text="Success Message" />
+        <p-message severity="info" text="Info Message" />
+        <p-message severity="warn" text="Warning Message" />
+        <p-message severity="error" text="Error Message" />
+      </div>
+    </p-card>
+
+    <!-- Table -->
+    <p-card header="Data Table" styleClass="demo-card">
+      <p-table [value]="products()" [tableStyle]="{ 'min-width': '50rem' }">
+        <ng-template #header>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Status</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-product>
+          <tr>
+            <td>{{ product.id }}</td>
+            <td>{{ product.name }}</td>
+            <td>{{ product.category }}</td>
+            <td>{{ product.price | currency }}</td>
+            <td>{{ product.quantity }}</td>
+            <td>
+              <p-tag [value]="product.status" [severity]="getStatusSeverity(product.status)" />
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-card>
+
+    <!-- Drawer & Dialog -->
+    <p-card header="Drawer & Dialog" styleClass="demo-card">
+      <div class="action-buttons">
+        <p-button label="Open Drawer" icon="pi pi-bars" (onClick)="drawerVisible.set(true)" />
+        <p-button label="Open Dialog" icon="pi pi-window-maximize" (onClick)="dialogVisible.set(true)" />
+      </div>
+    </p-card>
+
+    <!-- Menu -->
+    <p-card header="Menu" styleClass="demo-card">
+      <p-menu [model]="menuItems()" />
+    </p-card>
+  </div>
+
+  <!-- Drawer -->
+  <p-drawer
+    [visible]="drawerVisible()"
+    (visibleChange)="drawerVisible.set($event)"
+    position="right"
+    [modal]="true"
+  >
+    <ng-template #header>
+      <h2>Drawer Header</h2>
+    </ng-template>
+    <div class="drawer-content">
+      <p>This is a drawer component from PrimeNG.</p>
+      <p>It can contain any content you want!</p>
+      <ul>
+        <li>Item 1</li>
+        <li>Item 2</li>
+        <li>Item 3</li>
+      </ul>
+    </div>
+  </p-drawer>
+
+  <!-- Dialog -->
+  <p-dialog
+    [visible]="dialogVisible()"
+    (visibleChange)="dialogVisible.set($event)"
+    header="Dialog Header"
+    [modal]="true"
+    [style]="{ width: '50vw' }"
+  >
+    <div class="dialog-content">
+      <p>This is a dialog component from PrimeNG.</p>
+      <p>You can put forms, tables, or any other content here.</p>
+    </div>
+    <ng-template #footer>
+      <p-button label="Cancel" severity="secondary" (onClick)="dialogVisible.set(false)" />
+      <p-button label="Save" (onClick)="dialogVisible.set(false)" />
+    </ng-template>
+  </p-dialog>
+</app-dashboard-layout>
+

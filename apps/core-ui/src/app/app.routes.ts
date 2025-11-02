@@ -19,6 +19,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'primeng-demo',
+    loadComponent: () =>
+      import('./features/primeng-demo/primeng-demo.component').then((m) => m.PrimeNGDemoComponent),
+    canActivate: [authGuard],
+  },
+  {
     path: 'join-organization',
     loadComponent: () =>
       import('./features/join-organization/join-organization.component').then(
