@@ -10,10 +10,16 @@ import {
 } from "typeorm";
 import { TaskEntity } from "./task.entity";
 
+export enum CommentStatus {
+  ACTIVE = "active",
+  DELETED = "deleted",
+}
+
 @Entity({ name: "task_comments" })
 @Index("idx_task_comments_tenant_id", ["tenant_id"])
 @Index("idx_task_comments_task_id", ["task_id"])
 @Index("idx_task_comments_user_id", ["user_id"])
+@Index("idx_task_comments_status", ["status"])
 export class TaskCommentEntity {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
@@ -29,6 +35,13 @@ export class TaskCommentEntity {
 
   @Column({ type: "text" })
   content!: string;
+
+  @Column({
+    type: "varchar",
+    length: 20,
+    default: CommentStatus.ACTIVE,
+  })
+  status!: CommentStatus;
 
   @CreateDateColumn({ type: "timestamp with time zone" })
   created_at!: Date;

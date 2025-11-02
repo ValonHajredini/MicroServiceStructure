@@ -8,6 +8,7 @@ import { TasksService } from "./tasks.service";
 import { TasksRepository } from "./repositories/tasks.repository";
 import { ColumnsRepository } from "../columns/repositories/columns.repository";
 import { BoardsRepository } from "../boards/repositories/boards.repository";
+import { TaskActivityService } from "./task-activity.service";
 import { TaskEntity, TaskPriority, TaskStatus } from "./entities/task.entity";
 import { CreateTaskDto } from "./dto/create-task.dto";
 import { UpdateTaskDto } from "./dto/update-task.dto";
@@ -75,6 +76,10 @@ describe("TasksService", () => {
       findOne: jest.fn(),
     };
 
+    const mockActivityService = {
+      logActivity: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TasksService,
@@ -89,6 +94,10 @@ describe("TasksService", () => {
         {
           provide: BoardsRepository,
           useValue: mockBoardsRepository,
+        },
+        {
+          provide: TaskActivityService,
+          useValue: mockActivityService,
         },
       ],
     }).compile();

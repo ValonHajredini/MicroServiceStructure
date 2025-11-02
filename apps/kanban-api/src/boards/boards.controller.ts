@@ -8,8 +8,10 @@ import {
   Post,
   Query,
   UseGuards,
+  BadRequestException,
 } from "@nestjs/common";
 import { BoardsService } from "./boards.service";
+import { BoardsUpdatesService } from "./boards-updates.service";
 import { CreateBoardDto } from "./dto/create-board.dto";
 import { UpdateBoardDto } from "./dto/update-board.dto";
 import { CurrentTenant } from "../common/decorators/current-tenant.decorator";
@@ -19,7 +21,10 @@ import { RolesGuard } from "../auth/guards/roles.guard";
 @Controller("api/v1/boards")
 @UseGuards(RolesGuard)
 export class BoardsController {
-  constructor(private readonly boardsService: BoardsService) {}
+  constructor(
+    private readonly boardsService: BoardsService,
+    private readonly boardsUpdatesService: BoardsUpdatesService,
+  ) {}
 
   @Post()
   async create(
@@ -93,5 +98,35 @@ export class BoardsController {
       user.roles || [],
     );
     return { success: true, message: "Board deleted successfully" };
+  }
+
+  @Get(":id/updates")
+  async getUpdates(
+    @Param("id") boardId: string,
+    @Query("since") since: string,
+    @CurrentTenant() tenantId: string,
+  ) {
+    if (!since) {
+      throw new BadRequestException("'since' query parameter is required");
+    }
+
+    const sinceDate = new Date(since);
+    if (isNaN(sinceDate.getTime())) {
+      throw new BadRequestException("'since' must be a valid ISO timestamp");
+    }
+
+    // Verify user has access to this board before returning updates
+    await this.boardsService.findOne(boardId, tenantId);
+
+    const updates = await this.boardsUpdatesService.getUpdatesSince(
+      boardId,
+      sinceDate,
+      tenantId,
+    );
+
+    return {
+      success: true,
+      data: updates,
+    };
   }
 }

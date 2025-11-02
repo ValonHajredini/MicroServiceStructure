@@ -762,4 +762,176 @@ describe("TasksController (e2e)", () => {
         .expect(404);
     });
   });
+
+  describe("GET /api/v1/tasks/:id/activity", () => {
+    let activityTaskId: string;
+    let doneColumnId: string;
+
+    beforeAll(async () => {
+      // Create a task for activity testing
+      const taskResponse = await request(app.getHttpServer())
+        .post(`/api/v1/columns/${tenantAColumnId}/tasks`)
+        .set("Authorization", `Bearer ${tenantAToken}`)
+        .send({
+          title: "Activity Test Task",
+          assignedTo: "user-a",
+        });
+      activityTaskId = taskResponse.body.id;
+
+      // Create a "Done" column for completion testing
+      const doneColumnResponse = await request(app.getHttpServer())
+        .post(`/api/v1/boards/${tenantABoardId}/columns`)
+        .set("Authorization", `Bearer ${tenantAToken}`)
+        .send({ title: "Done", position: 3 });
+      doneColumnId = doneColumnResponse.body.id;
+    });
+
+    it("should return activity timeline ordered by created_at DESC", async () => {
+      // Create activity by updating task
+      await request(app.getHttpServer())
+        .patch(`/api/v1/tasks/${activityTaskId}`)
+        .set("Authorization", `Bearer ${tenantAToken}`)
+        .send({ title: "Updated Title" });
+
+      return request(app.getHttpServer())
+        .get(`/api/v1/tasks/${activityTaskId}/activity`)
+        .set("Authorization", `Bearer ${tenantAToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body).toHaveProperty("success", true);
+          expect(res.body).toHaveProperty("data");
+          expect(Array.isArray(res.body.data)).toBe(true);
+          // Verify ordering (newest first)
+          if (res.body.data.length > 1) {
+            const first = new Date(res.body.data[0].created_at);
+            const second = new Date(res.body.data[1].created_at);
+            expect(first.getTime()).toBeGreaterThanOrEqual(second.getTime());
+          }
+        });
+    });
+
+    it("should log 'created' activity when task is created", async () => {
+      const newTaskResponse = await request(app.getHttpServer())
+        .post(`/api/v1/columns/${tenantAColumnId}/tasks`)
+        .set("Authorization", `Bearer ${tenantAToken}`)
+        .send({ title: "New Task for Activity" });
+      const newTaskId = newTaskResponse.body.id;
+
+      const activityResponse = await request(app.getHttpServer())
+        .get(`/api/v1/tasks/${newTaskId}/activity`)
+        .set("Authorization", `Bearer ${tenantAToken}`);
+
+      expect(activityResponse.body.data.length).toBeGreaterThan(0);
+      const createdActivity = activityResponse.body.data.find(
+        (a: any) => a.action_type === "created",
+      );
+      expect(createdActivity).toBeDefined();
+    });
+
+    it("should log 'assigned' activity when task is assigned", async () => {
+      const taskResponse = await request(app.getHttpServer())
+        .post(`/api/v1/columns/${tenantAColumnId}/tasks`)
+        .set("Authorization", `Bearer ${tenantAToken}`)
+        .send({ title: "Task to Assign" });
+      const taskId = taskResponse.body.id;
+
+      await request(app.getHttpServer())
+        .patch(`/api/v1/tasks/${taskId}`)
+        .set("Authorization", `Bearer ${tenantAToken}`)
+        .send({ assignedTo: "user-b" });
+
+      const activityResponse = await request(app.getHttpServer())
+        .get(`/api/v1/tasks/${taskId}/activity`)
+        .set("Authorization", `Bearer ${tenantAToken}`);
+
+      const assignedActivity = activityResponse.body.data.find(
+        (a: any) => a.action_type === "assigned",
+      );
+      expect(assignedActivity).toBeDefined();
+      expect(assignedActivity.new_value).toBe("user-b");
+    });
+
+    it("should log 'moved' activity when task is moved between columns", async () => {
+      const taskResponse = await request(app.getHttpServer())
+        .post(`/api/v1/columns/${tenantAColumnId}/tasks`)
+        .set("Authorization", `Bearer ${tenantAToken}`)
+        .send({ title: "Task to Move" });
+      const taskId = taskResponse.body.id;
+
+      await request(app.getHttpServer())
+        .patch(`/api/v1/tasks/${taskId}/move`)
+        .set("Authorization", `Bearer ${tenantAToken}`)
+        .send({ columnId: tenantASecondColumnId, position: 0 });
+
+      const activityResponse = await request(app.getHttpServer())
+        .get(`/api/v1/tasks/${taskId}/activity`)
+        .set("Authorization", `Bearer ${tenantAToken}`);
+
+      const movedActivity = activityResponse.body.data.find(
+        (a: any) => a.action_type === "moved",
+      );
+      expect(movedActivity).toBeDefined();
+      expect(movedActivity.old_value).toBe("To Do");
+      expect(movedActivity.new_value).toBe("In Progress");
+    });
+
+    it("should log 'completed' activity when task is moved to Done column", async () => {
+      const taskResponse = await request(app.getHttpServer())
+        .post(`/api/v1/columns/${tenantAColumnId}/tasks`)
+        .set("Authorization", `Bearer ${tenantAToken}`)
+        .send({ title: "Task to Complete" });
+      const taskId = taskResponse.body.id;
+
+      await request(app.getHttpServer())
+        .patch(`/api/v1/tasks/${taskId}/move`)
+        .set("Authorization", `Bearer ${tenantAToken}`)
+        .send({ columnId: doneColumnId, position: 0 });
+
+      const activityResponse = await request(app.getHttpServer())
+        .get(`/api/v1/tasks/${taskId}/activity`)
+        .set("Authorization", `Bearer ${tenantAToken}`);
+
+      const completedActivity = activityResponse.body.data.find(
+        (a: any) => a.action_type === "completed",
+      );
+      expect(completedActivity).toBeDefined();
+      expect(completedActivity.new_value).toContain("Done");
+    });
+
+    it("should log 'updated' activity when task fields are updated", async () => {
+      const taskResponse = await request(app.getHttpServer())
+        .post(`/api/v1/columns/${tenantAColumnId}/tasks`)
+        .set("Authorization", `Bearer ${tenantAToken}`)
+        .send({ title: "Task to Update" });
+      const taskId = taskResponse.body.id;
+
+      await request(app.getHttpServer())
+        .patch(`/api/v1/tasks/${taskId}`)
+        .set("Authorization", `Bearer ${tenantAToken}`)
+        .send({ title: "Updated Title", priority: "high" });
+
+      const activityResponse = await request(app.getHttpServer())
+        .get(`/api/v1/tasks/${taskId}/activity`)
+        .set("Authorization", `Bearer ${tenantAToken}`);
+
+      const updatedActivity = activityResponse.body.data.find(
+        (a: any) => a.action_type === "updated",
+      );
+      expect(updatedActivity).toBeDefined();
+    });
+
+    it("should enforce tenant isolation for activity", () => {
+      return request(app.getHttpServer())
+        .get(`/api/v1/tasks/${tenantBTaskId}/activity`)
+        .set("Authorization", `Bearer ${tenantAToken}`)
+        .expect(404); // Task not found in tenant A scope
+    });
+
+    it("should return 404 if task not found", () => {
+      return request(app.getHttpServer())
+        .get("/api/v1/tasks/non-existent-task/activity")
+        .set("Authorization", `Bearer ${tenantAToken}`)
+        .expect(404);
+    });
+  });
 });

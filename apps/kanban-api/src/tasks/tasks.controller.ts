@@ -14,19 +14,29 @@ import { UpdateTaskDto } from "./dto/update-task.dto";
 import { CurrentTenant } from "../common/decorators/current-tenant.decorator";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
 import { RolesGuard } from "../auth/guards/roles.guard";
+import { TaskActivityService } from "./task-activity.service";
 
 @Controller("api/v1")
 @UseGuards(RolesGuard)
 export class TasksController {
-  constructor(private readonly tasksService: TasksService) {}
+  constructor(
+    private readonly tasksService: TasksService,
+    private readonly activityService: TaskActivityService,
+  ) {}
 
   @Post("columns/:columnId/tasks")
   async create(
     @Param("columnId") columnId: string,
     @Body() createTaskDto: CreateTaskDto,
     @CurrentTenant() tenantId: string,
+    @CurrentUser() user?: { userId: string },
   ) {
-    return this.tasksService.create(columnId, createTaskDto, tenantId);
+    return this.tasksService.create(
+      columnId,
+      createTaskDto,
+      tenantId,
+      user?.userId,
+    );
   }
 
   @Get("tasks/:id")
@@ -75,5 +85,17 @@ export class TasksController {
       user.userId,
       user.roles || [],
     );
+  }
+
+  @Get("tasks/:id/activity")
+  async getActivity(
+    @Param("id") id: string,
+    @CurrentTenant() tenantId: string,
+  ) {
+    const activities = await this.activityService.findAllByTask(id, tenantId);
+    return {
+      success: true,
+      data: activities,
+    };
   }
 }

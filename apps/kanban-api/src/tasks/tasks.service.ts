@@ -11,6 +11,9 @@ import { CreateTaskDto } from "./dto/create-task.dto";
 import { UpdateTaskDto } from "./dto/update-task.dto";
 import { ColumnsRepository } from "../columns/repositories/columns.repository";
 import { BoardsRepository } from "../boards/repositories/boards.repository";
+import { TaskActivityService } from "./task-activity.service";
+import { TaskActionType } from "./entities/task-activity.entity";
+import { KanbanGateway } from "../websocket/kanban.gateway";
 
 @Injectable()
 export class TasksService {
@@ -18,12 +21,15 @@ export class TasksService {
     private readonly tasksRepository: TasksRepository,
     private readonly columnsRepository: ColumnsRepository,
     private readonly boardsRepository: BoardsRepository,
+    private readonly activityService: TaskActivityService,
+    private readonly kanbanGateway: KanbanGateway,
   ) {}
 
   async create(
     columnId: string,
     createTaskDto: CreateTaskDto,
-    _tenantId: string,
+    tenantId: string,
+    userId?: string,
   ): Promise<TaskEntity> {
     // Verify column exists and belongs to tenant
     const column = await this.columnsRepository.findOne({
@@ -54,7 +60,7 @@ export class TasksService {
       existingTasks.length > 0 ? existingTasks[0].position + 1 : 0;
 
     // Create task with tenant_id, board_id, column_id
-    return this.tasksRepository.save({
+    const task = await this.tasksRepository.save({
       column_id: columnId,
       board_id: boardId,
       title: createTaskDto.title,
@@ -65,6 +71,21 @@ export class TasksService {
       position,
       status: TaskStatus.ACTIVE,
     });
+
+    // Log activity: task created
+    if (userId) {
+      await this.activityService.logActivity(
+        task.id,
+        TaskActionType.CREATED,
+        userId,
+        tenantId,
+      );
+    }
+
+    // Emit WebSocket event: task created
+    this.kanbanGateway.emitTaskCreated(boardId, tenantId, task);
+
+    return task;
   }
 
   async findOne(id: string, _tenantId: string): Promise<TaskEntity> {
@@ -83,7 +104,7 @@ export class TasksService {
   async update(
     id: string,
     updateTaskDto: UpdateTaskDto,
-    _tenantId: string,
+    tenantId: string,
     userId: string,
     userRoles: string[],
   ): Promise<TaskEntity> {
@@ -111,23 +132,31 @@ export class TasksService {
       );
     }
 
+    // Track changes for activity logging
+    const oldAssignedTo = task.assigned_to;
+    let hasOtherChanges = false;
+
     // Update task fields
     if (updateTaskDto.title !== undefined) {
       task.title = updateTaskDto.title;
+      hasOtherChanges = true;
     }
     if (updateTaskDto.description !== undefined) {
       task.description = updateTaskDto.description ?? null;
+      hasOtherChanges = true;
     }
     if (updateTaskDto.assignedTo !== undefined) {
       task.assigned_to = updateTaskDto.assignedTo ?? null;
     }
     if (updateTaskDto.priority !== undefined) {
       task.priority = updateTaskDto.priority;
+      hasOtherChanges = true;
     }
     if (updateTaskDto.dueDate !== undefined) {
       task.due_date = updateTaskDto.dueDate
         ? new Date(updateTaskDto.dueDate)
         : null;
+      hasOtherChanges = true;
     }
 
     // Handle column_id change (move task, update position)
@@ -139,7 +168,7 @@ export class TasksService {
         id,
         updateTaskDto.columnId,
         task.position,
-        _tenantId,
+        tenantId,
         userId,
         userRoles,
       );
@@ -150,7 +179,38 @@ export class TasksService {
       return updatedTask!;
     }
 
-    return this.tasksRepository.save(task);
+    const updatedTask = await this.tasksRepository.save(task);
+
+    // Log activity: assigned or updated
+    if (
+      updateTaskDto.assignedTo !== undefined &&
+      oldAssignedTo !== updateTaskDto.assignedTo
+    ) {
+      await this.activityService.logActivity(
+        id,
+        TaskActionType.ASSIGNED,
+        userId,
+        tenantId,
+        oldAssignedTo ?? undefined,
+        updateTaskDto.assignedTo ?? undefined,
+      );
+    } else if (hasOtherChanges) {
+      await this.activityService.logActivity(
+        id,
+        TaskActionType.UPDATED,
+        userId,
+        tenantId,
+      );
+    }
+
+    // Emit WebSocket event: task updated
+    this.kanbanGateway.emitTaskUpdated(
+      updatedTask.board_id,
+      tenantId,
+      updatedTask,
+    );
+
+    return updatedTask;
   }
 
   async remove(
@@ -192,7 +252,7 @@ export class TasksService {
     taskId: string,
     targetColumnId: string,
     newPosition: number,
-    _tenantId: string,
+    tenantId: string,
     userId: string,
     userRoles: string[],
   ): Promise<TaskEntity> {
@@ -241,6 +301,10 @@ export class TasksService {
       );
     }
 
+    // Store old column name for activity log
+    const oldColumnName = sourceColumn.title;
+    const newColumnName = targetColumn.title;
+
     // Update column_id and position
     task.column_id = targetColumnId;
 
@@ -270,7 +334,32 @@ export class TasksService {
       }
     }
 
-    return this.tasksRepository.save(task);
+    const movedTask = await this.tasksRepository.save(task);
+
+    // Log activity: moved (or completed if moved to "Done" column)
+    const isCompleted =
+      targetColumn.title.toLowerCase().includes("done") ||
+      targetColumn.title.toLowerCase().includes("complete");
+    await this.activityService.logActivity(
+      taskId,
+      isCompleted ? TaskActionType.COMPLETED : TaskActionType.MOVED,
+      userId,
+      tenantId,
+      oldColumnName,
+      newColumnName,
+    );
+
+    // Emit WebSocket event: task moved
+    this.kanbanGateway.emitTaskMoved(
+      movedTask.board_id,
+      tenantId,
+      taskId,
+      sourceColumn.id,
+      targetColumnId,
+      newPosition,
+    );
+
+    return movedTask;
   }
 
   findByColumn(columnId: string): Promise<TaskEntity[]> {

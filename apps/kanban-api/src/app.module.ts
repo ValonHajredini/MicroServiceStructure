@@ -10,6 +10,7 @@ import { TasksModule } from "./tasks/tasks.module";
 import { AuthModule } from "./auth/auth.module";
 import { JwtAuthGuard } from "./auth/guards/jwt-auth.guard";
 import { TenantContextMiddleware } from "./common/middleware/tenant-context.middleware";
+import { WebsocketModule } from "./websocket/websocket.module";
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { TenantContextMiddleware } from "./common/middleware/tenant-context.midd
     BoardsModule,
     ColumnsModule,
     TasksModule,
+    WebsocketModule,
   ],
   controllers: [AppController],
   providers: [

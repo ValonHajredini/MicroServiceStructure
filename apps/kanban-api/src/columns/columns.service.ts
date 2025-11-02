@@ -11,6 +11,7 @@ import { BoardsRepository } from "../boards/repositories/boards.repository";
 import { TasksRepository } from "../tasks/repositories/tasks.repository";
 import { TaskEntity, TaskStatus } from "../tasks/entities/task.entity";
 import { BoardStatus } from "../boards/entities/board.entity";
+import { KanbanGateway } from "../websocket/kanban.gateway";
 
 @Injectable()
 export class ColumnsService {
@@ -18,6 +19,7 @@ export class ColumnsService {
     private readonly columnsRepository: ColumnsRepository,
     private readonly boardsRepository: BoardsRepository,
     private readonly tasksRepository: TasksRepository,
+    private readonly kanbanGateway: KanbanGateway,
   ) {}
 
   async create(
@@ -54,13 +56,18 @@ export class ColumnsService {
     }
 
     // Create column with tenant_id and board_id
-    return this.columnsRepository.save({
+    const column = await this.columnsRepository.save({
       board_id: boardId,
       title: createColumnDto.title,
       position,
       wip_limit: createColumnDto.wip_limit ?? null,
       status: ColumnStatus.ACTIVE,
     });
+
+    // Emit WebSocket event: column added
+    this.kanbanGateway.emitColumnAdded(boardId, _tenantId, column);
+
+    return column;
   }
 
   async findAllByBoard(
@@ -259,12 +266,19 @@ export class ColumnsService {
     }
 
     // Update position values based on new order
+    const updatedColumns = [];
     for (let i = 0; i < columnIds.length; i++) {
       const column = boardColumns.find((col) => col.id === columnIds[i]);
       if (column && column.position !== i) {
         column.position = i;
         await this.columnsRepository.save(column);
+        updatedColumns.push(column);
       }
+    }
+
+    // Emit WebSocket event: columns reordered
+    if (updatedColumns.length > 0) {
+      this.kanbanGateway.emitColumnReordered(boardId, tenantId, boardColumns);
     }
   }
 
