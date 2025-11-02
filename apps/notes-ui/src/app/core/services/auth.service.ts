@@ -59,21 +59,4 @@ export class AuthService {
     localStorage.removeItem(this.JWT_TOKEN_KEY);
     // Redirect to login page (will be handled by the guard)
   }
-
-  /**
-   * Dev-only method to simulate login with a default test user
-   * Token payload: {
-   *   sub: "user-001",
-   *   email: "admin@tenant1.com",
-   *   tenantId: "tenant-001",
-   *   roles: ["admin"],
-   *   enabledServices: ["notes", "kanban"]
-   * }
-   */
-  devLogin(): void {
-    // This is a valid JWT token for dev/testing purposes
-    // Expires: November 1, 2026
-    const devToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLTAwMSIsImVtYWlsIjoiYWRtaW5AdGVuYW50MS5jb20iLCJ0ZW5hbnRJZCI6InRlbmFudC0wMDEiLCJyb2xlcyI6WyJhZG1pbiJdLCJlbmFibGVkU2VydmljZXMiOlsibm90ZXMiLCJrYW5iYW4iXSwiaWF0IjoxNzYyMDQxNDUxLCJleHAiOjE3OTM1Nzc0NTF9.D9dfl9BEHxJsldUAimmoXxDVkJHsW6JeCs7TxwCltko';
-    this.setToken(devToken);
-  }
 }

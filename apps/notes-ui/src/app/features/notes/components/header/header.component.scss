@@ -63,11 +63,21 @@
     align-items: center;
 
     .user-menu {
-      ::ng-deep .p-button {
-        color: #fff;
+      ::ng-deep {
+        .p-button {
+          color: #fff;
 
-        &:hover {
-          background: rgba(255, 255, 255, 0.1);
+          &:hover {
+            background: rgba(255, 255, 255, 0.1);
+          }
+        }
+
+        .user-menu-container .p-button {
+          color: #fff;
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.1);
+          }
         }
       }
     }
@@ -104,8 +114,14 @@
 
     .header-right {
       .user-menu {
-        ::ng-deep .p-button .p-button-label {
-          display: none;
+        ::ng-deep {
+          .p-button .p-button-label {
+            display: none;
+          }
+
+          .user-menu-container .p-button .p-button-label {
+            display: none;
+          }
         }
       }
     }

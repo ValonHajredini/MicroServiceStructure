@@ -1,15 +1,13 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { MenuModule } from 'primeng/menu';
-import { ButtonModule } from 'primeng/button';
-import { AvatarModule } from 'primeng/avatar';
 import { MenuItem } from 'primeng/api';
+import { UserMenuComponent } from '@microservice/ui-common';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-top-nav',
-  imports: [CommonModule, MenuModule, ButtonModule, AvatarModule],
+  imports: [CommonModule, UserMenuComponent],
   templateUrl: './top-nav.html',
   styleUrl: './top-nav.scss',
 })

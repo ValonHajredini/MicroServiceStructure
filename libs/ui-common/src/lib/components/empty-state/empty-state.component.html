@@ -1,0 +1,10 @@
+<div class="empty-state">
+  <i [class]="'pi ' + icon" *ngIf="icon"></i>
+  <h3>{{ title }}</h3>
+  <p *ngIf="message">{{ message }}</p>
+  <p-button
+    *ngIf="actionLabel"
+    [label]="actionLabel"
+    (onClick)="onAction()">
+  </p-button>
+</div>

@@ -6,29 +6,14 @@
 
     <div class="nav-right">
       <div class="user-section">
-        <button
-          #menuButton
-          type="button"
-          class="user-button"
-          (click)="menu.toggle($event)">
-          <p-avatar
-            [label]="userInitials()"
-            styleClass="user-avatar"
-            shape="circle">
-          </p-avatar>
-          <div class="user-info">
-            <span class="user-name">{{ userFullName() }}</span>
-            <span class="user-email">{{ userEmail() }}</span>
-          </div>
-          <i class="pi pi-chevron-down"></i>
-        </button>
-
-        <p-menu
-          #menu
-          [model]="userMenuItems()"
-          [popup]="true"
-          appendTo="body">
-        </p-menu>
+        <ui-user-menu
+          [userEmail]="userEmail()"
+          [userDisplayName]="userFullName()"
+          [userInitials]="userInitials()"
+          [menuItems]="userMenuItems()"
+          buttonStyle="avatar"
+          [showShadow]="true">
+        </ui-user-menu>
       </div>
     </div>
   </div>

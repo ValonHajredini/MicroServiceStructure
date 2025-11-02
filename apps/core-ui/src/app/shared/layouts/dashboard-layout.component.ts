@@ -1,14 +1,13 @@
-import { Component, signal, inject, OnInit, ViewChild } from '@angular/core';
+import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
 import { AvatarModule } from 'primeng/avatar';
-import { MenuModule } from 'primeng/menu';
-import { Menu } from 'primeng/menu';
 import { PanelMenuModule } from 'primeng/panelmenu';
 import { BadgeModule } from 'primeng/badge';
 import { MenuItem } from 'primeng/api';
+import { UserMenuComponent } from '@microservice/ui-common';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -20,7 +19,7 @@ import { AuthService } from '../../core/services/auth.service';
     ButtonModule,
     DrawerModule,
     AvatarModule,
-    MenuModule,
+    UserMenuComponent,
     PanelMenuModule,
     BadgeModule,
   ],
@@ -28,15 +27,13 @@ import { AuthService } from '../../core/services/auth.service';
   styleUrls: ['./dashboard-layout.component.scss']
 })
 export class DashboardLayoutComponent implements OnInit {
-  @ViewChild('userMenu') userMenu!: Menu;
-
   private router = inject(Router);
   private authService = inject(AuthService);
 
   sidebarVisible = signal(false);
-  userMenuVisible = signal(false);
 
   userFullName = signal('');
+  userEmail = signal('');
   userInitials = signal('');
   userRole = signal('');
   tenantName = signal('');
@@ -53,15 +50,17 @@ export class DashboardLayoutComponent implements OnInit {
   }
 
   private loadUserInfo(): void {
-    this.userFullName.set(this.authService.getUserFullName() || 'User');
-    this.userInitials.set(this.authService.getUserInitials() || 'U');
-    
     const user = this.authService.getUserFromToken();
+
+    this.userFullName.set(this.authService.getUserFullName() || 'User');
+    this.userEmail.set(user?.email || '');
+    this.userInitials.set(this.authService.getUserInitials() || 'U');
+
     if (user?.roles && user.roles.length > 0) {
       const role = user.roles[0];
       this.userRole.set(role.charAt(0).toUpperCase() + role.slice(1));
     }
-    
+
     this.tenantName.set('My Workspace');
   }
 
@@ -192,50 +191,25 @@ export class DashboardLayoutComponent implements OnInit {
     ]);
 
     // User dropdown menu
-    const userId = user?.id || 'U';
-    const userName = this.userFullName();
-    const userRole = this.userRole();
     this.userMenuItems.set([
       {
-        label: this.buildUserHeaderMarkup(userName, userRole),
-        icon: 'pi pi-user',
-        disabled: true,
-        styleClass: 'user-menu-header',
-        escape: false
-      },
-      {
-        separator: true,
-        styleClass: 'user-menu-separator'
-      },
-      {
         label: 'Profile',
-        icon: 'pi pi-id-card',
+        icon: 'pi pi-user',
         command: () => this.router.navigate(['/profile']),
-        styleClass: 'user-menu-item'
       },
       {
         label: 'Settings',
         icon: 'pi pi-cog',
         command: () => this.router.navigate(['/settings']),
-        styleClass: 'user-menu-item'
+      },
+      {
+        separator: true,
       },
       {
         label: 'Logout',
         icon: 'pi pi-sign-out',
         command: () => this.logout(),
-        styleClass: 'user-menu-item'
       },
-      {
-        separator: true,
-        styleClass: 'user-menu-separator'
-      },
-      {
-        label: this.buildUserIdMarkup(userId),
-        icon: '',
-        disabled: true,
-        styleClass: 'user-id-section',
-        escape: false
-      }
     ]);
   }
 
@@ -243,47 +217,9 @@ export class DashboardLayoutComponent implements OnInit {
     this.sidebarVisible.set(!this.sidebarVisible());
   }
 
-  toggleUserMenu(event: Event): void {
-    if (!this.userMenu) {
-      return;
-    }
-
-    this.userMenu.toggle(event);
-  }
-
-  onMenuShow(): void {
-    this.userMenuVisible.set(true);
-  }
-
-  onMenuHide(): void {
-    this.userMenuVisible.set(false);
-  }
-
-  closeUserMenu(): void {
-    if (this.userMenuVisible() && this.userMenu) {
-      this.userMenu.hide();
-    }
-  }
-
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
-  }
-
-  private buildUserHeaderMarkup(name: string, role: string): string {
-    return `
-      <div class="user-menu-heading">
-        <span class="user-menu-name">${name}</span>
-        <span class="user-menu-role">${role}</span>
-      </div>
-    `.trim();
-  }
-
-  private buildUserIdMarkup(userId: string): string {
-    return `
-      <span class="user-menu-label">User ID</span>
-      <strong>${userId}</strong>
-    `.trim();
   }
 }
 

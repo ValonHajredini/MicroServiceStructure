@@ -18,19 +18,11 @@
 
   <div class="header-right">
     <div class="user-menu">
-      <p-button
-        [label]="userEmail()"
-        icon="pi pi-user"
-        [text]="true"
-        (onClick)="userMenu.toggle($event)"
-        #userMenuButton>
-      </p-button>
-      <p-menu
-        #userMenu
-        [model]="userMenuItems()"
-        [popup]="true"
-        appendTo="body">
-      </p-menu>
+      <ui-user-menu
+        [userEmail]="userEmail()"
+        [menuItems]="userMenuItems()"
+        buttonStyle="simple">
+      </ui-user-menu>
     </div>
   </div>
 </header>

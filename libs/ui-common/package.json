@@ -1,0 +1,29 @@
+{
+  "name": "@microservice/ui-common",
+  "version": "0.0.1",
+  "description": "Shared Angular UI components and utilities for microservice applications",
+  "peerDependencies": {
+    "@angular/common": "^20.3.0",
+    "@angular/core": "^20.3.0",
+    "@angular/router": "^20.3.0",
+    "primeng": "^20.3.0",
+    "primeicons": "^7.0.0",
+    "rxjs": "~7.8.0"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build": "npx ng-packagr -p ng-package.json",
+    "test": "echo 'No tests configured yet' && exit 0",
+    "lint": "echo 'Lint not configured' && exit 0",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "angular",
+    "primeng",
+    "shared-components",
+    "ui-library"
+  ]
+}

@@ -1,16 +1,15 @@
 import { Component, Output, EventEmitter, inject, signal, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
-import { MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
+import { UserMenuComponent } from '@microservice/ui-common';
 import { AuthService } from '../../../../core/services/auth.service';
 import { SearchBarComponent } from '../search-bar/search-bar';
 import { SearchResultNote } from '../../services/notes.service';
 
 @Component({
   selector: 'app-header',
-  imports: [CommonModule, ButtonModule, MenuModule, SearchBarComponent],
+  imports: [CommonModule, UserMenuComponent, SearchBarComponent],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })
