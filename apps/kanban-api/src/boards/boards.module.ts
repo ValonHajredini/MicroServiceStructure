@@ -12,7 +12,12 @@ import { TasksRepository } from "../tasks/repositories/tasks.repository";
 @Module({
   imports: [TypeOrmModule.forFeature([BoardEntity, ColumnEntity, TaskEntity])],
   controllers: [BoardsController],
-  providers: [BoardsService, BoardsRepository, ColumnsRepository, TasksRepository],
+  providers: [
+    BoardsService,
+    BoardsRepository,
+    ColumnsRepository,
+    TasksRepository,
+  ],
   exports: [BoardsService, BoardsRepository],
 })
 export class BoardsModule {}

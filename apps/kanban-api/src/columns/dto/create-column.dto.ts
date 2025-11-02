@@ -3,26 +3,23 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsUUID,
   MaxLength,
   Min,
 } from "class-validator";
 
 export class CreateColumnDto {
-  @IsUUID()
-  boardId!: string;
-
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
   title!: string;
 
+  @IsOptional()
   @IsInt()
   @Min(0)
-  position!: number;
+  position?: number;
 
   @IsOptional()
   @IsInt()
   @Min(1)
-  wipLimit?: number;
+  wip_limit?: number;
 }

@@ -180,39 +180,54 @@ export class NotesService {
     }
 
     // If token provided, fetch file metadata for each attachment
+    // QA Fix: PERF-001 - Use batch fetching instead of individual calls
     if (token && note.attachments && note.attachments.length > 0) {
-      const enrichedAttachments = await Promise.all(
-        note.attachments.map(async (attachment) => {
-          try {
-            const fileMetadata = await this.filesClientService.getFileMetadata(
-              attachment.file_id,
-              token,
-            );
+      const fileIds = note.attachments.map((a) => a.file_id);
 
-            return {
-              id: attachment.id,
-              file_id: attachment.file_id,
-              filename: fileMetadata.filename,
-              file_size: fileMetadata.file_size,
-              mime_type: fileMetadata.mime_type,
-              storage_url: fileMetadata.storage_url,
-              created_at: attachment.created_at,
-            };
-          } catch (error) {
-            // If file metadata unavailable, return partial data with error flag
-            return {
-              id: attachment.id,
-              file_id: attachment.file_id,
-              filename: 'File unavailable',
-              file_size: 0,
-              mime_type: 'unknown',
-              storage_url: null,
-              created_at: attachment.created_at,
-              error: 'File metadata unavailable',
-            };
-          }
-        }),
-      );
+      // Batch fetch all file metadata at once
+      let fileMetadataMap: Map<string, any>;
+      try {
+        const fileMetadataList = await this.filesClientService.getMultipleFileMetadata(
+          fileIds,
+          token,
+        );
+        // Create map for O(1) lookup
+        fileMetadataMap = new Map(
+          fileMetadataList.map((file) => [file.id, file]),
+        );
+      } catch (error) {
+        // If batch fetch fails, create empty map (will result in error flags)
+        fileMetadataMap = new Map();
+      }
+
+      // Enrich attachments with file metadata
+      const enrichedAttachments = note.attachments.map((attachment) => {
+        const fileMetadata = fileMetadataMap.get(attachment.file_id);
+
+        if (!fileMetadata) {
+          // If file metadata unavailable, return partial data with error flag
+          return {
+            id: attachment.id,
+            file_id: attachment.file_id,
+            filename: 'File unavailable',
+            file_size: 0,
+            mime_type: 'unknown',
+            storage_url: null,
+            created_at: attachment.created_at,
+            error: 'File metadata unavailable',
+          };
+        }
+
+        return {
+          id: attachment.id,
+          file_id: attachment.file_id,
+          filename: fileMetadata.filename,
+          file_size: fileMetadata.file_size,
+          mime_type: fileMetadata.mime_type,
+          storage_url: fileMetadata.storage_url,
+          created_at: attachment.created_at,
+        };
+      });
 
       // Calculate total attachment size and count
       const attachmentTotalSize = enrichedAttachments

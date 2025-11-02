@@ -45,7 +45,9 @@ export class BoardsService {
     // Use query builder to access repository with tenant scoping
     const queryBuilder = this.boardsRepository.createQueryBuilder("board");
     queryBuilder.where("board.tenant_id = :tenantId", { tenantId });
-    queryBuilder.andWhere("board.status = :status", { status: BoardStatus.ACTIVE });
+    queryBuilder.andWhere("board.status = :status", {
+      status: BoardStatus.ACTIVE,
+    });
     queryBuilder.orderBy("board.created_at", "DESC");
     queryBuilder.skip(skip).take(limit);
 
@@ -66,6 +68,13 @@ export class BoardsService {
 
     if (!board) {
       throw new NotFoundException(`Board with ID ${id} not found`);
+    }
+
+    // Sort columns by position if they exist
+    if (board.columns) {
+      board.columns = board.columns
+        .filter((col) => col.status === ColumnStatus.ACTIVE)
+        .sort((a, b) => a.position - b.position);
     }
 
     return board;

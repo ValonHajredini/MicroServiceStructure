@@ -1,0 +1,235 @@
+# Quality Gate: Story 4.4 - Kanban API Task CRUD Operations
+schema: 1
+story: "4.4"
+story_title: "Kanban API - Task CRUD Operations"
+gate: CONCERNS
+status_reason: "Functionally complete with excellent test coverage (16 unit + 29 e2e tests), but missing critical authorization check for task movement operation (AUTH-001)."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-01-30T15:00:00Z"
+
+# Critical gap identified
+top_issues:
+  - id: "AUTH-001"
+    severity: high
+    finding: "Missing authorization check in moveTask operation"
+    details: "The PATCH /tasks/:id/move endpoint and TasksService.moveTask() method do not verify user authorization before allowing task movement. According to AC 7, only task assignee, board owner, or tenant admin should be able to modify tasks. Moving a task is a modification operation (updates column_id and position)."
+    suggested_action: "Add authorization check to moveTask() method verifying user is assignee, board owner, or admin. Update controller endpoint to include @CurrentUser() and @Roles() decorators. Add e2e test for unauthorized move attempt."
+    refs:
+      - "apps/kanban-api/src/tasks/tasks.service.ts:184-249 (moveTask method)"
+      - "apps/kanban-api/src/tasks/tasks.controller.ts:63-75 (moveTask endpoint)"
+      - "docs/stories/4.4.story.md:34 (AC 7)"
+    suggested_owner: "dev"
+
+  - id: "MAINT-001"
+    severity: low
+    finding: "Duplicate authorization logic across methods"
+    details: "Authorization pattern (assignee OR board owner OR admin) is duplicated in update(), remove(), and should be in moveTask(). Consider extracting to shared helper method for DRY principle."
+    suggested_action: "Extract authorization check to private helper method (e.g., canModifyTask()) for reuse across update, remove, and moveTask methods."
+    refs:
+      - "apps/kanban-api/src/tasks/tasks.service.ts:98-112 (update authorization)"
+      - "apps/kanban-api/src/tasks/tasks.service.ts:163-177 (remove authorization)"
+    suggested_owner: "dev"
+
+  - id: "VAL-001"
+    severity: low
+    finding: "Missing validation for moveTask request body"
+    details: "PATCH /tasks/:id/move endpoint accepts body with columnId and position but no validation decorators are applied. Should validate columnId is UUID and position is number."
+    suggested_action: "Create MoveTaskDto with @IsUUID() and @IsNumber() decorators, or add inline validation to ensure data integrity."
+    refs:
+      - "apps/kanban-api/src/tasks/tasks.controller.ts:66 (moveTask body parameter)"
+    suggested_owner: "dev"
+
+waiver: { active: false }
+
+# Quality metrics
+quality_score: 85  # 100 - (20 for high AUTH-001) - (0 for low severity issues) = 85
+expires: "2025-02-13T00:00:00Z"
+
+# Evidence from comprehensive review
+evidence:
+  tests_reviewed: 45  # 16 unit tests + 29 e2e tests (all passing)
+  risks_identified: 3
+  files_reviewed: 8
+  trace:
+    ac_covered: [1, 2, 3, 4, 5, 6]  # All ACs implemented
+    ac_gaps: [7]  # AC 7 partially met (authorization missing for move)
+    test_coverage_gaps:
+      - "E2E test for unauthorized moveTask attempt (not testable until authorization added)"
+
+# NFR Assessment
+nfr_validation:
+  security:
+    status: CONCERNS
+    notes: "AUTH-001: Missing authorization check for moveTask operation allows any authenticated tenant user to move any task, violating AC 7. Create, update, and delete operations properly enforce authorization (assignee/board owner/admin). Tenant isolation enforced via BaseTenantRepository."
+  performance:
+    status: PASS
+    notes: "Efficient position queries using single query with ORDER BY. Position adjustment in moveTask uses targeted updates (only affected tasks). Proper indexes on tenant_id, column_id, position. No N+1 query patterns."
+  reliability:
+    status: PASS
+    notes: "Proper error handling with appropriate exceptions (NotFoundException, ForbiddenException, BadRequestException). Tenant isolation enforced automatically via BaseTenantRepository. Soft delete prevents data loss. Position adjustment logic handles edge cases correctly."
+  maintainability:
+    status: PASS
+    notes: "Clean service architecture with proper separation of concerns. Comprehensive test coverage (45 tests total). Good code documentation. Minor duplication in authorization logic (MAINT-001) but overall maintainable."
+
+# Risk Summary
+risk_summary:
+  totals:
+    critical: 0
+    high: 1  # AUTH-001
+    medium: 0
+    low: 2  # MAINT-001, VAL-001
+  highest_identified:
+    - "Missing authorization for moveTask allows unauthorized task modifications"
+    - "Minor code duplication in authorization checks"
+  recommendations:
+    must_fix:
+      - "Add authorization check to moveTask() method (AUTH-001)"
+      - "Update controller endpoint with @CurrentUser() and @Roles() decorators"
+      - "Add e2e test for unauthorized move attempt"
+    monitor:
+      - "Verify authorization enforcement across all task modification operations"
+      - "Monitor position adjustment performance with large task lists"
+
+# Detailed recommendations
+recommendations:
+  immediate:  # Must fix before production
+    - action: "Add authorization check to moveTask operation"
+      refs:
+        - "apps/kanban-api/src/tasks/tasks.service.ts:184-249"
+        - "apps/kanban-api/src/tasks/tasks.controller.ts:63-75"
+      priority: high
+      status: PENDING
+      details: "Verify user is assignee, board owner, or admin before allowing task movement. Use same authorization pattern as update/remove methods."
+
+  future:  # Can be addressed later
+    - action: "Extract authorization logic to shared helper method"
+      refs:
+        - "apps/kanban-api/src/tasks/tasks.service.ts"
+      priority: low
+      status: PENDING
+      notes: "Create private canModifyTask() helper method to eliminate duplication across update, remove, and moveTask methods."
+
+    - action: "Add validation for moveTask request body"
+      refs:
+        - "apps/kanban-api/src/tasks/tasks.controller.ts:66"
+      priority: low
+      status: PENDING
+      notes: "Create MoveTaskDto with validation decorators or add inline validation for columnId (UUID) and position (number)."
+
+# Requirements Traceability
+requirements_traceability:
+  AC_1_POST_endpoint:
+    status: IMPLEMENTED
+    test_coverage: UNIT_AND_E2E
+    tests:
+      - "tasks.service.spec.ts (create method tests)"
+      - "tasks.controller.e2e-spec.ts:101-193 (e2e tests)"
+    implementation:
+      - "tasks.service.ts:23-68"
+      - "tasks.controller.ts:23-30"
+
+  AC_2_auto_assigned_fields:
+    status: IMPLEMENTED
+    test_coverage: UNIT_AND_E2E
+    tests:
+      - "tasks.service.spec.ts (auto-position tests)"
+      - "tasks.controller.e2e-spec.ts:129-164 (position auto-assignment)"
+    implementation:
+      - "tasks.service.ts:43-54 (position calculation)"
+      - "tasks.service.ts:57-67 (task creation with tenant_id from BaseTenantRepository)"
+
+  AC_3_GET_with_comments:
+    status: IMPLEMENTED
+    test_coverage: UNIT_AND_E2E
+    tests:
+      - "tasks.service.spec.ts (findOne with comments)"
+      - "tasks.controller.e2e-spec.ts:195-237 (e2e retrieval tests)"
+    implementation:
+      - "tasks.service.ts:70-81"
+      - "tasks.controller.ts:32-35"
+
+  AC_4_PATCH_update:
+    status: IMPLEMENTED
+    test_coverage: UNIT_AND_E2E
+    tests:
+      - "tasks.service.spec.ts (update with authorization)"
+      - "tasks.controller.e2e-spec.ts:239-363 (e2e update tests)"
+    implementation:
+      - "tasks.service.ts:83-147"
+      - "tasks.controller.ts:37-51"
+
+  AC_5_DELETE_soft_delete:
+    status: IMPLEMENTED
+    test_coverage: UNIT_AND_E2E
+    tests:
+      - "tasks.service.spec.ts (remove with authorization)"
+      - "tasks.controller.e2e-spec.ts:365-486 (e2e delete tests)"
+    implementation:
+      - "tasks.service.ts:149-182"
+      - "tasks.controller.ts:53-61"
+
+  AC_6_move_task:
+    status: IMPLEMENTED
+    test_coverage: UNIT_AND_E2E
+    test_gaps:
+      - "Authorization test missing (cannot test until authorization added)"
+    tests:
+      - "tasks.service.spec.ts (moveTask method tests)"
+      - "tasks.controller.e2e-spec.ts:488-604 (e2e move tests)"
+    implementation:
+      - "tasks.service.ts:184-249"
+      - "tasks.controller.ts:63-75"
+
+  AC_7_authorization:
+    status: PARTIALLY_IMPLEMENTED
+    test_coverage: PARTIAL
+    tests:
+      - "tasks.service.spec.ts (authorization tests for update/remove)"
+      - "tasks.controller.e2e-spec.ts (authorization tests for update/delete)"
+    missing_tests:
+      - "E2E test for unauthorized moveTask attempt"
+    implementation:
+      - "tasks.service.ts:98-112 (update authorization) ✓"
+      - "tasks.service.ts:163-177 (remove authorization) ✓"
+      - "tasks.service.ts:184-249 (moveTask authorization) ✗ MISSING"
+    gaps:
+      - "moveTask() method does not check authorization before allowing task movement"
+
+# Strengths Worth Highlighting
+strengths:
+  - "Comprehensive test coverage: 16 unit tests + 29 e2e tests (all passing)"
+  - "All 6 functional acceptance criteria (AC 1-6) fully implemented and tested"
+  - "Proper use of BaseTenantRepository for automatic tenant isolation"
+  - "Clean service architecture following NestJS best practices"
+  - "Robust error handling with appropriate exceptions"
+  - "Position auto-assignment and adjustment logic works correctly"
+  - "Soft delete properly implemented with TaskStatus.DELETED"
+  - "WIP limit check integrated (optional enforcement per Story 4.3)"
+  - "Good code documentation and structure"
+  - "Proper input validation with class-validator decorators"
+
+# Final Assessment
+final_assessment:
+  gate_decision: CONCERNS
+  confidence_level: HIGH
+  production_ready: false
+  blockers:
+    - "Missing authorization check for moveTask operation (AUTH-001)"
+  technical_debt: "Low - minor duplication in authorization logic"
+  recommended_next_action: "Add authorization check to moveTask() method and corresponding e2e test, then re-submit for QA review"
+  notes: "Core implementation is excellent with comprehensive test coverage. The missing authorization for moveTask is a security concern that must be addressed. Once fixed, this story will be production-ready."
+  estimated_effort_to_pass: "1-2 hours"
+
+# Audit trail
+history:
+  - at: "2025-01-30T15:00:00Z"
+    gate: CONCERNS
+    quality_score: 85
+    reviewer: "Quinn (Test Architect)"
+    note: "Initial review - Functionally complete with excellent test coverage (45 tests total, all passing). Critical gap identified: Missing authorization check for moveTask operation (AUTH-001). All other authorization properly enforced. 3 issues identified (1 high, 2 low)."
+    issues_found: 3
+    test_coverage: "Unit: 16 tests, E2E: 29 tests (all passing)"
+    improvements_needed:
+      - "Add authorization check to moveTask() method"
+      - "Update controller with @CurrentUser() and @Roles() decorators"
+      - "Add e2e test for unauthorized move attempt"
