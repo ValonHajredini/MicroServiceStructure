@@ -1,8 +1,24 @@
 <div class="notes-app">
+  <!-- Toast Notifications -->
+  <p-toast></p-toast>
+
+  <!-- Confirmation Dialog -->
+  <p-confirmDialog></p-confirmDialog>
+
+  <!-- Folder Dialog -->
+  @if (showFolderDialog()) {
+    <app-folder-dialog
+      (folderCreated)="onFolderCreated()"
+      (cancel)="onFolderDialogCancel()">
+    </app-folder-dialog>
+  }
+
   <!-- Header -->
   <app-header
     [sidebarVisible]="sidebarVisible()"
-    (toggleSidebar)="toggleSidebar()">
+    (toggleSidebar)="toggleSidebar()"
+    (searchResults)="onSearchResults($event)"
+    (searchCleared)="onSearchCleared()">
   </app-header>
 
   <div class="notes-container">
@@ -19,6 +35,15 @@
       <!-- Note List (desktop: always visible, mobile: conditional) -->
       <div class="note-list-panel"
            [class.hidden]="isMobileView() && !showNoteList()">
+        <!-- Toolbar -->
+        <app-toolbar
+          [selectedNote]="currentNote()"
+          (newNote)="onNewNoteClickAction()"
+          (newFolder)="onNewFolderClick()"
+          (pinNote)="onPinNote($event)"
+          (deleteNote)="onDeleteNote($event)">
+        </app-toolbar>
+
         <app-note-list
           [folderId]="selectedFolderId()"
           (noteSelected)="onNoteSelected($event)"
@@ -46,7 +71,8 @@
             @if (selectedNoteId() && currentNote()) {
               <app-attachments
                 [noteId]="selectedNoteId()!"
-                [attachments]="currentNote()!.attachments || []">
+                [attachments]="currentNote()!.attachments || []"
+                (attachmentAdded)="onAttachmentAdded($event)">
               </app-attachments>
             }
           </div>

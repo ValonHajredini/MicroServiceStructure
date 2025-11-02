@@ -1,0 +1,51 @@
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+
+  .p-input-icon-left {
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+
+    &.p-input-icon-right {
+      .clear-icon {
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #6c757d;
+        z-index: 1;
+
+        &:hover {
+          color: #495057;
+        }
+      }
+    }
+
+    input.search-input {
+      width: 100%;
+      padding-right: 2.5rem;
+    }
+  }
+
+  .search-spinner {
+    ::ng-deep .p-progress-spinner-circle {
+      animation: p-progress-spinner-dash 1.5s ease-in-out infinite;
+    }
+  }
+
+  .result-count {
+    font-size: 0.875rem;
+    color: #6c757d;
+    white-space: nowrap;
+  }
+
+  .no-results {
+    font-size: 0.875rem;
+    color: #dc3545;
+    white-space: nowrap;
+  }
+}

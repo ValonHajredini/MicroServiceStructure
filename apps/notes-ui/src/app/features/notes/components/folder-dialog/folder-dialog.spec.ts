@@ -2,15 +2,15 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { MessageService } from 'primeng/api';
-import { FolderDialog } from './folder-dialog';
+import { FolderDialogComponent } from './folder-dialog';
 
-describe('FolderDialog', () => {
-  let component: FolderDialog;
-  let fixture: ComponentFixture<FolderDialog>;
+describe('FolderDialogComponent', () => {
+  let component: FolderDialogComponent;
+  let fixture: ComponentFixture<FolderDialogComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [FolderDialog],
+      imports: [FolderDialogComponent],
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
@@ -19,7 +19,7 @@ describe('FolderDialog', () => {
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(FolderDialog);
+    fixture = TestBed.createComponent(FolderDialogComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

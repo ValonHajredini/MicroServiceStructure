@@ -1,16 +1,17 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
-import { NotesLayout } from './features/notes/components/notes-layout/notes-layout';
+import { NotesLayoutComponent } from './features/notes/components/notes-layout/notes-layout';
+import { SsoCallbackComponent } from './features/auth/sso-callback/sso-callback.component';
 
 export const routes: Routes = [
   {
-    path: '',
-    redirectTo: 'notes',
-    pathMatch: 'full'
+    path: 'auth/sso-callback',
+    component: SsoCallbackComponent,
+    // No auth guard - this is the SSO entry point
   },
   {
     path: 'notes',
-    component: NotesLayout,
+    component: NotesLayoutComponent,
     canActivate: [authGuard],
     children: [
       {
@@ -20,16 +21,21 @@ export const routes: Routes = [
       },
       {
         path: 'all',
-        component: NotesLayout
+        component: NotesLayoutComponent
       },
       {
         path: 'folder/:folderId',
-        component: NotesLayout
+        component: NotesLayoutComponent
       },
       {
         path: 'note/:noteId',
-        component: NotesLayout
+        component: NotesLayoutComponent
       }
     ]
+  },
+  {
+    path: '',
+    redirectTo: 'notes',
+    pathMatch: 'full'
   }
 ];

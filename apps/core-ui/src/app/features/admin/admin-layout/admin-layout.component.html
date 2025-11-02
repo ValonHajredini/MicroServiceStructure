@@ -1,0 +1,50 @@
+<div class="admin-layout">
+  <!-- Header -->
+  <div class="admin-header">
+    <div class="header-content">
+      <div class="header-left">
+        <button
+          pButton
+          icon="pi pi-arrow-left"
+          class="p-button-text p-button-plain"
+          (click)="goToDashboard()"
+          label="Back to Dashboard"
+        ></button>
+      </div>
+      <div class="header-center">
+        <h1>
+          <i class="pi pi-shield"></i>
+          Admin Panel
+        </h1>
+        <p class="subtitle">Manage your organization settings</p>
+      </div>
+      <div class="header-right">
+        <span class="user-badge">
+          <i class="pi pi-user"></i>
+          {{ getUserName() }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="admin-nav">
+    <div class="nav-tabs">
+      @for (item of navItems; track item.route) {
+        <button
+          class="nav-tab"
+          [class.active]="isActive(item.route)"
+          (click)="navigateTo(item.route)"
+        >
+          <i [class]="item.icon"></i>
+          <span>{{ item.label }}</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Content Area -->
+  <div class="admin-content">
+    <router-outlet></router-outlet>
+  </div>
+</div>

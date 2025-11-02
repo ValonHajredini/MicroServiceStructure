@@ -8,11 +8,11 @@ import { ContextMenuModule } from 'primeng/contextmenu';
 import { MenuItem } from 'primeng/api';
 import { FoldersService } from '../../services/folders.service';
 import { Folder } from '../../models/folder.model';
-import { FolderDialog } from '../folder-dialog/folder-dialog';
+import { FolderDialogComponent } from '../folder-dialog/folder-dialog';
 
 @Component({
   selector: 'app-sidebar',
-  imports: [CommonModule, TreeModule, ButtonModule, ConfirmDialogModule, ContextMenuModule, FolderDialog],
+  imports: [CommonModule, TreeModule, ButtonModule, ConfirmDialogModule, ContextMenuModule, FolderDialogComponent],
   providers: [ConfirmationService],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss']

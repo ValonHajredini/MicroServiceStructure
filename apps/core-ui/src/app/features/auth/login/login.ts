@@ -32,6 +32,7 @@ export class Login {
 
   loginForm: FormGroup;
   errorMessage = '';
+  successMessage = '';
   isSubmitting = false;
   isDevelopment = !environment.production;
 
@@ -61,6 +62,12 @@ export class Login {
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
     });
+
+    // Check for success message from navigation state
+    const navigation = this.router.getCurrentNavigation();
+    if (navigation?.extras?.state?.['message']) {
+      this.successMessage = navigation.extras.state['message'];
+    }
   }
 
   get email() {

@@ -32,7 +32,7 @@ import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
  * - Auto-scope to tenant from JWT
  * - Use standard response format
  */
-@Controller('api/v1/notes')
+@Controller('notes')
 @UseGuards(JwtAuthGuard)
 export class NotesController {
   constructor(

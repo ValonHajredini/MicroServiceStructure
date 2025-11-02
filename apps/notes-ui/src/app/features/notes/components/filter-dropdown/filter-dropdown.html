@@ -1,0 +1,22 @@
+<div class="filter-dropdown">
+  <p-button
+    [label]="filterLabel"
+    icon="pi pi-filter"
+    styleClass="p-button-outlined p-button-sm"
+    [badge]="hasActiveFilter ? '1' : ''"
+    badgeClass="p-badge-info"
+    (click)="menu.toggle($event)"
+    #filterButton>
+  </p-button>
+
+  <p-menu #menu [model]="menuItems" [popup]="true"></p-menu>
+
+  @if (hasActiveFilter) {
+    <p-button
+      icon="pi pi-times"
+      styleClass="p-button-text p-button-sm"
+      pTooltip="Clear filter"
+      (click)="clearFilter()">
+    </p-button>
+  }
+</div>

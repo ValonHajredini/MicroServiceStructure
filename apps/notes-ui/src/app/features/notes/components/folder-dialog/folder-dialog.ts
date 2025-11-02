@@ -15,7 +15,7 @@ import { Folder } from '../../models/folder.model';
   templateUrl: './folder-dialog.html',
   styleUrl: './folder-dialog.scss',
 })
-export class FolderDialog {
+export class FolderDialogComponent {
   private foldersService = inject(FoldersService);
   private messageService = inject(MessageService);
 

@@ -1,0 +1,175 @@
+.file-upload-container {
+  .drop-zone {
+    border: 2px dashed var(--surface-border);
+    border-radius: 8px;
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--surface-ground);
+    margin-bottom: 1rem;
+
+    &:hover:not(.disabled) {
+      border-color: var(--primary-color);
+      background-color: var(--primary-50);
+    }
+
+    &.drag-over {
+      border-color: var(--primary-color);
+      background-color: var(--primary-100);
+      border-style: solid;
+      transform: scale(1.02);
+    }
+
+    &.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .icon {
+      font-size: 3rem;
+      color: var(--text-color-secondary);
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .message {
+      margin: 0.5rem 0;
+      color: var(--text-color);
+      font-weight: 500;
+      font-size: 1.1rem;
+    }
+
+    .hint {
+      display: block;
+      color: var(--text-color-secondary);
+      margin-top: 0.25rem;
+      font-size: 0.875rem;
+    }
+  }
+
+  .upload-queue {
+    margin-top: 1.5rem;
+
+    .upload-item {
+      background: var(--surface-card);
+      border: 1px solid var(--surface-border);
+      border-radius: 6px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      transition: box-shadow 0.2s;
+
+      &:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .upload-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+
+        i {
+          font-size: 1.25rem;
+        }
+
+        .filename {
+          flex: 1;
+          font-weight: 500;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .file-size {
+          color: var(--text-color-secondary);
+          font-size: 0.875rem;
+        }
+
+        .actions {
+          display: flex;
+          gap: 0.25rem;
+        }
+      }
+
+      .upload-progress {
+        margin-top: 0.75rem;
+
+        .status {
+          display: block;
+          margin-top: 0.5rem;
+          color: var(--text-color-secondary);
+          font-size: 0.875rem;
+        }
+      }
+
+      .error-message {
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        background: var(--red-50);
+        border-left: 3px solid var(--red-500);
+        border-radius: 4px;
+
+        small {
+          font-size: 0.875rem;
+        }
+
+        .retry-count {
+          display: block;
+          margin-top: 0.25rem;
+          color: var(--text-color-secondary);
+        }
+      }
+
+      .success-message {
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        background: var(--green-50);
+        border-left: 3px solid var(--green-500);
+        border-radius: 4px;
+
+        small {
+          font-size: 0.875rem;
+        }
+      }
+
+      .queued-message {
+        margin-top: 0.5rem;
+
+        small {
+          font-size: 0.875rem;
+        }
+      }
+    }
+  }
+
+  .queue-summary {
+    text-align: center;
+    padding: 0.75rem;
+    background: var(--surface-ground);
+    border-radius: 4px;
+    margin-top: 1rem;
+
+    small {
+      color: var(--text-color-secondary);
+      font-size: 0.875rem;
+    }
+  }
+}
+
+// Utility classes
+.text-green-500 {
+  color: var(--green-500);
+}
+
+.text-red-500 {
+  color: var(--red-500);
+}
+
+.text-gray-500 {
+  color: var(--gray-500);
+}
+
+.text-blue-500 {
+  color: var(--blue-500);
+}

@@ -1,15 +1,17 @@
-import { Component, inject, signal, input } from '@angular/core';
+import { Component, inject, signal, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { NotesService } from '../../services/notes.service';
+import { FileUploadService } from '../../services/file-upload.service';
 import { Attachment } from '../../models/attachment.model';
 import { FileSizePipe } from '../../../../shared/pipes/file-size.pipe';
+import { FileUploadComponent } from '../file-upload/file-upload';
 
 @Component({
   selector: 'app-attachments',
-  imports: [CommonModule, ButtonModule, ConfirmDialogModule, FileSizePipe],
+  imports: [CommonModule, ButtonModule, ConfirmDialogModule, FileSizePipe, FileUploadComponent],
   providers: [ConfirmationService],
   templateUrl: './attachments.component.html',
   styleUrls: ['./attachments.component.scss']
@@ -17,11 +19,16 @@ import { FileSizePipe } from '../../../../shared/pipes/file-size.pipe';
 export class AttachmentsComponent {
   private notesService = inject(NotesService);
   private confirmationService = inject(ConfirmationService);
+  private fileUploadService = inject(FileUploadService);
+  private messageService = inject(MessageService);
 
   noteId = input.required<string>();
   attachments = input<Attachment[]>([]);
 
+  attachmentAdded = output<Attachment>();
+
   deleting = signal<Set<string>>(new Set());
+  showUpload = signal(false);
 
   getFileIcon(mimeType: string): string {
     if (mimeType.startsWith('image/')) return 'pi pi-image';
@@ -75,5 +82,26 @@ export class AttachmentsComponent {
 
   isDeleting(attachmentId: string): boolean {
     return this.deleting().has(attachmentId);
+  }
+
+  /**
+   * Toggle upload section
+   */
+  toggleUpload(): void {
+    this.showUpload.set(!this.showUpload());
+  }
+
+  /**
+   * Handle file uploaded event
+   */
+  onFileUploaded(attachment: Attachment): void {
+    this.attachmentAdded.emit(attachment);
+  }
+
+  /**
+   * Calculate total size of current attachments
+   */
+  getTotalSize(): number {
+    return this.fileUploadService.calculateTotalSize(this.attachments());
   }
 }

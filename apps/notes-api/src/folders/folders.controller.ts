@@ -27,7 +27,7 @@ import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
  * - Auto-scope to tenant from JWT
  * - Support single-level nesting only
  */
-@Controller('api/v1/folders')
+@Controller('folders')
 @UseGuards(JwtAuthGuard)
 export class FoldersController {
   constructor(private readonly foldersService: FoldersService) {}

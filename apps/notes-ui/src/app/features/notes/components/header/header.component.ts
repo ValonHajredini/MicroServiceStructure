@@ -5,10 +5,12 @@ import { ButtonModule } from 'primeng/button';
 import { MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
 import { AuthService } from '../../../../core/services/auth.service';
+import { SearchBarComponent } from '../search-bar/search-bar';
+import { SearchResultNote } from '../../services/notes.service';
 
 @Component({
   selector: 'app-header',
-  imports: [CommonModule, ButtonModule, MenuModule],
+  imports: [CommonModule, ButtonModule, MenuModule, SearchBarComponent],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })
@@ -18,6 +20,8 @@ export class HeaderComponent {
 
   sidebarVisible = input<boolean>(true);
   @Output() toggleSidebar = new EventEmitter<void>();
+  @Output() searchResults = new EventEmitter<SearchResultNote[]>();
+  @Output() searchCleared = new EventEmitter<void>();
 
   userEmail = signal<string>('');
   userMenuItems = signal<MenuItem[]>([]);
@@ -29,6 +33,16 @@ export class HeaderComponent {
     }
 
     this.userMenuItems.set([
+      {
+        label: 'Back to Dashboard',
+        icon: 'pi pi-home',
+        command: () => {
+          this.goToDashboard();
+        }
+      },
+      {
+        separator: true
+      },
       {
         label: 'Settings',
         icon: 'pi pi-cog',
@@ -55,9 +69,22 @@ export class HeaderComponent {
     this.toggleSidebar.emit();
   }
 
+  goToDashboard(): void {
+    // Navigate back to core-ui dashboard
+    window.location.href = 'http://localhost:4200/dashboard';
+  }
+
   logout(): void {
     this.authService.logout();
-    // Redirect to login (Core Service)
-    window.location.href = 'http://localhost:3000/login';
+    // Redirect to core-ui login page
+    window.location.href = 'http://localhost:4200/login';
+  }
+
+  onSearchResults(results: SearchResultNote[]): void {
+    this.searchResults.emit(results);
+  }
+
+  onSearchCleared(): void {
+    this.searchCleared.emit();
   }
 }

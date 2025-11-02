@@ -53,4 +53,41 @@ export class NotesService {
   deleteAttachment(noteId: string, attachmentId: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${noteId}/attachments/${attachmentId}`);
   }
+
+  searchNotes(query: string, page: number = 1, limit: number = 20): Observable<SearchResult> {
+    const params = new HttpParams()
+      .set('q', query)
+      .set('page', page.toString())
+      .set('limit', limit.toString());
+
+    return this.http.get<ApiResponse<SearchResultData>>(`${this.apiUrl}/search`, { params }).pipe(
+      map(response => ({
+        results: response.data.data,
+        meta: response.data.meta
+      }))
+    );
+  }
+}
+
+export interface SearchResultData {
+  data: SearchResultNote[];
+  meta: SearchMeta;
+}
+
+export interface SearchResultNote extends Note {
+  snippet?: string;
+  rank?: number;
+}
+
+export interface SearchMeta {
+  query: string;
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface SearchResult {
+  results: SearchResultNote[];
+  meta: SearchMeta;
 }

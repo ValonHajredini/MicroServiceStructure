@@ -15,7 +15,7 @@ export const routes: Routes = [
   {
     path: 'dashboard',
     loadComponent: () =>
-      import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
+      import('./features/dashboard/dashboard-home.component').then((m) => m.DashboardHomeComponent),
     canActivate: [authGuard],
   },
   {
@@ -26,28 +26,40 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'admin/join-requests',
+    path: 'admin',
     loadComponent: () =>
-      import('./features/admin/join-requests/join-requests-list.component').then(
-        (m) => m.JoinRequestsListComponent
+      import('./features/admin/admin-layout/admin-layout.component').then(
+        (m) => m.AdminLayoutComponent
       ),
     canActivate: [authGuard],
-  },
-  {
-    path: 'admin/services',
-    loadComponent: () =>
-      import('./features/admin/service-management/service-management.component').then(
-        (m) => m.ServiceManagementComponent
-      ),
-    canActivate: [authGuard],
-  },
-  {
-    path: 'admin/team',
-    loadComponent: () =>
-      import('./features/admin/team-management/team-management').then(
-        (m) => m.TeamManagement
-      ),
-    canActivate: [authGuard],
+    children: [
+      {
+        path: 'services',
+        loadComponent: () =>
+          import('./features/admin/service-management/service-management.component').then(
+            (m) => m.ServiceManagementComponent
+          ),
+      },
+      {
+        path: 'team',
+        loadComponent: () =>
+          import('./features/admin/team-management/team-management').then(
+            (m) => m.TeamManagement
+          ),
+      },
+      {
+        path: 'join-requests',
+        loadComponent: () =>
+          import('./features/admin/join-requests/join-requests-list.component').then(
+            (m) => m.JoinRequestsListComponent
+          ),
+      },
+      {
+        path: '',
+        redirectTo: 'services',
+        pathMatch: 'full',
+      },
+    ],
   },
   {
     path: 'forgot-password',

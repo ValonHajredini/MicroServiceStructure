@@ -1,0 +1,34 @@
+<div class="search-bar">
+  <span class="p-input-icon-left" [class.p-input-icon-right]="hasQuery">
+    <i class="pi pi-search"></i>
+    <input
+      type="text"
+      pInputText
+      [formControl]="searchControl"
+      placeholder="Search notes..."
+      class="search-input"
+      [disabled]="isSearching" />
+
+    @if (hasQuery) {
+      <i class="pi pi-times clear-icon"
+         (click)="clearSearch()"
+         title="Clear search (Esc)"></i>
+    }
+  </span>
+
+  @if (isSearching) {
+    <p-progressSpinner
+      styleClass="search-spinner"
+      [style]="{width: '20px', height: '20px'}"
+      strokeWidth="4">
+    </p-progressSpinner>
+  }
+
+  @if (hasQuery && !isSearching && resultCount > 0) {
+    <span class="result-count">Found {{ resultCount }} note{{ resultCount !== 1 ? 's' : '' }}</span>
+  }
+
+  @if (hasQuery && !isSearching && resultCount === 0) {
+    <span class="no-results">No results found for "{{ searchControl.value }}"</span>
+  }
+</div>

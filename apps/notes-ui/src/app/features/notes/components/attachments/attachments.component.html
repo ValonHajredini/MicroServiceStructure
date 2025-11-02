@@ -7,16 +7,25 @@
         <span class="attachment-count">({{ attachments().length }})</span>
       }
     </h4>
-    <!-- Placeholder for upload functionality (Story 3.8) -->
     <p-button
-      icon="pi pi-upload"
-      label="Upload"
+      [icon]="showUpload() ? 'pi pi-times' : 'pi pi-upload'"
+      [label]="showUpload() ? 'Cancel' : 'Add File'"
       [text]="true"
       size="small"
-      [disabled]="true"
-      pTooltip="Upload feature coming in Story 3.8">
+      (onClick)="toggleUpload()">
     </p-button>
   </div>
+
+  <!-- File Upload Section -->
+  @if (showUpload()) {
+    <div class="upload-section">
+      <app-file-upload
+        [noteId]="noteId()"
+        [currentTotalSize]="getTotalSize()"
+        (fileUploaded)="onFileUploaded($event)">
+      </app-file-upload>
+    </div>
+  }
 
   <div class="attachments-list">
     @if (attachments().length === 0) {

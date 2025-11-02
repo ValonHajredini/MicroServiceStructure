@@ -1,0 +1,100 @@
+<app-dashboard-layout>
+  <!-- Welcome Header -->
+  <div class="welcome-section">
+    <h1 class="welcome-title">Welcome back, {{ userFullName() }}! 👋</h1>
+    <p class="welcome-subtitle">Here's what's happening with your workspace today</p>
+  </div>
+
+  <!-- Quick Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon stat-icon-blue">
+        <i class="pi pi-building"></i>
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Organization</p>
+        <h3 class="stat-value">{{ tenantName() }}</h3>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon stat-icon-purple">
+        <i class="pi pi-shield"></i>
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Your Role</p>
+        <h3 class="stat-value">{{ userRole() }}</h3>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon stat-icon-green">
+        <i class="pi pi-check-circle"></i>
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Active Services</p>
+        <h3 class="stat-value">{{ enabledServices().length }}</h3>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon stat-icon-orange">
+        <i class="pi pi-users"></i>
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">User ID</p>
+        <h3 class="stat-value">{{ userInitials() }}</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- Services Section -->
+  <div class="services-container">
+    <div class="services-header">
+      <h2 class="services-title">Your Services</h2>
+      <p-button
+        label="Manage Services"
+        icon="pi pi-cog"
+        styleClass="p-button-outlined"
+        (onClick)="goToServiceManagement()"
+      />
+    </div>
+
+    @if (loading()) {
+      <div class="loading-state">
+        <i class="pi pi-spin pi-spinner"></i>
+        <p>Loading your dashboard...</p>
+      </div>
+    } @else if (enabledServices().length === 0) {
+      <div class="empty-state">
+        <i class="pi pi-info-circle"></i>
+        <h3>No Services Enabled</h3>
+        <p>Your organization hasn't enabled any services yet.</p>
+        <p-button
+          label="Enable Services"
+          icon="pi pi-plus"
+          (onClick)="goToServiceManagement()"
+        />
+      </div>
+    } @else {
+      <div class="services-grid">
+        @for (service of services(); track service.name) {
+          <app-service-card
+            [service]="service"
+            (open)="openService($event)"
+            (requestAccess)="requestAccess($event)"
+          />
+        }
+      </div>
+    }
+  </div>
+</app-dashboard-layout>
+
+@if (selectedService()) {
+  <app-request-access-modal
+    [visible]="showModal()"
+    [serviceName]="selectedService()!.name"
+    [serviceLabel]="selectedService()!.label"
+    (onClose)="closeModal()"
+  />
+}

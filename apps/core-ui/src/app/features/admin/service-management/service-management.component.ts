@@ -126,8 +126,13 @@ export class ServiceManagementComponent implements OnInit {
         next: () => {
           this.saving.set(false);
           this.successMessage.set(
-            'Services updated successfully! Please log out and log back in for changes to take effect.'
+            'Services updated successfully! Logging you out to apply changes...'
           );
+
+          // Automatically log out after 2 seconds to refresh JWT token
+          setTimeout(() => {
+            this.logout();
+          }, 2000);
         },
         error: (error) => {
           console.error('Error updating services:', error);
@@ -142,6 +147,9 @@ export class ServiceManagementComponent implements OnInit {
 
   logout(): void {
     this.authService.logout();
-    this.router.navigate(['/auth/login']);
+    // Redirect to login with a message
+    this.router.navigate(['/login'], {
+      state: { message: 'Services updated successfully! Please log in again to access your new services.' }
+    });
   }
 }

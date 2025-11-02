@@ -1,0 +1,35 @@
+<div class="toolbar">
+  <div class="toolbar-actions">
+    <p-button
+      label="New Note"
+      icon="pi pi-plus"
+      (onClick)="onNewNote()"
+      styleClass="p-button-primary">
+    </p-button>
+
+    <p-button
+      label="New Folder"
+      icon="pi pi-folder"
+      (onClick)="onNewFolder()"
+      styleClass="p-button-secondary">
+    </p-button>
+
+    <p-button
+      [icon]="pinButtonIcon"
+      [disabled]="!canPin"
+      [pTooltip]="pinButtonLabel"
+      (onClick)="onPinToggle()"
+      styleClass="p-button-text pin-button">
+    </p-button>
+
+    <p-button
+      icon="pi pi-trash"
+      [disabled]="!canDelete"
+      pTooltip="Delete"
+      (onClick)="onDelete()"
+      styleClass="p-button-text p-button-danger">
+    </p-button>
+  </div>
+
+  <app-filter-dropdown></app-filter-dropdown>
+</div>

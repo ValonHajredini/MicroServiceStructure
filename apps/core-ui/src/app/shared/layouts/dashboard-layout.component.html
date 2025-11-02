@@ -1,0 +1,93 @@
+<div class="dashboard-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="user-profile">
+        <p-avatar [label]="userInitials()" styleClass="avatar-gradient" size="large" />
+        <div class="user-info">
+          <h3 class="user-name">{{ userFullName() }}</h3>
+          <p class="user-role">{{ userRole() }}</p>
+        </div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <p-menu [model]="menuItems()" styleClass="sidebar-menu" />
+    </nav>
+
+    <div class="sidebar-footer">
+      <p class="tenant-name">Tenant: {{ tenantName() }}</p>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <div class="main-content">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="topbar-content">
+        <div class="topbar-left">
+          <button
+            pButton
+            type="button"
+            icon="pi pi-bars"
+            class="p-button-text menu-toggle"
+            (click)="toggleSidebar()"
+          ></button>
+          <h1 class="page-title">Dashboard</h1>
+        </div>
+
+        <div class="topbar-right">
+          <!-- Notifications -->
+          <button
+            type="button"
+            pButton
+            icon="pi pi-bell"
+            class="p-button-text notification-btn"
+          >
+            <span class="badge">3</span>
+          </button>
+
+          <!-- User Menu -->
+          <button
+            pButton
+            type="button"
+            (click)="userMenu.toggle($event)"
+            class="p-button-text user-menu-btn"
+          >
+            <p-avatar [label]="userInitials()" styleClass="avatar-gradient avatar-small" size="normal" />
+            <span class="user-name-text">{{ userFullName() }}</span>
+            <i class="pi pi-chevron-down"></i>
+          </button>
+          <p-menu #userMenu [model]="userMenuItems()" [popup]="true" />
+        </div>
+      </div>
+    </header>
+
+    <!-- Content Area -->
+    <main class="content-area">
+      <ng-content></ng-content>
+    </main>
+  </div>
+
+  <!-- Mobile Sidebar (Drawer) -->
+  <p-drawer
+    [visible]="sidebarVisible()"
+    (visibleChange)="sidebarVisible.set($event)"
+    [modal]="true"
+    position="left"
+    styleClass="mobile-drawer"
+    [showCloseIcon]="true"
+    [baseZIndex]="1000"
+  >
+    <div class="sidebar-header">
+      <div class="user-profile">
+        <p-avatar [label]="userInitials()" styleClass="avatar-gradient" size="large" />
+        <div class="user-info">
+          <h3 class="user-name">{{ userFullName() }}</h3>
+          <p class="user-role">{{ userRole() }}</p>
+        </div>
+      </div>
+    </div>
+    <p-menu [model]="menuItems()" styleClass="sidebar-menu" />
+  </p-drawer>
+</div>

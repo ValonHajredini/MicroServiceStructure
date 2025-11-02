@@ -9,6 +9,13 @@
     </div>
   </div>
 
+  <div class="header-center">
+    <app-search-bar
+      (searchResults)="onSearchResults($event)"
+      (searchCleared)="onSearchCleared()">
+    </app-search-bar>
+  </div>
+
   <div class="header-right">
     <div class="user-menu">
       <p-button

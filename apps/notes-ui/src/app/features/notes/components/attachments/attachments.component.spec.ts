@@ -1,8 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { of } from 'rxjs';
 import { AttachmentsComponent } from './attachments.component';
 import { NotesService } from '../../services/notes.service';
-import { ConfirmationService } from 'primeng/api';
+import { MessageService, ConfirmationService } from 'primeng/api';
 import { Attachment } from '../../models/attachment.model';
 
 describe('AttachmentsComponent', () => {
@@ -30,6 +32,9 @@ describe('AttachmentsComponent', () => {
     await TestBed.configureTestingModule({
       imports: [AttachmentsComponent],
       providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        MessageService,
         { provide: NotesService, useValue: notesServiceSpy }
       ]
     }).compileComponents();

@@ -1,2 +1,18 @@
 <p-toast />
+
+<!-- Dev-only login button (fixed position, only visible when not authenticated in dev mode) -->
+@if (isDevelopment && !isAuthenticated()) {
+  <div class="dev-login-button">
+    <p-button
+      label="Dev Login"
+      icon="pi pi-sign-in"
+      severity="warning"
+      size="small"
+      (onClick)="devLogin()"
+      pTooltip="Login as admin@tenant1.com (Dev Only)"
+      tooltipPosition="left">
+    </p-button>
+  </div>
+}
+
 <router-outlet />

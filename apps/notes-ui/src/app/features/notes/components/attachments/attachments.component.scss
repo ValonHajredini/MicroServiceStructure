@@ -30,6 +30,14 @@
     }
   }
 
+  .upload-section {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--surface-card);
+    border: 1px solid var(--surface-border);
+    border-radius: 6px;
+  }
+
   .attachments-list {
     .empty-state {
       text-align: center;

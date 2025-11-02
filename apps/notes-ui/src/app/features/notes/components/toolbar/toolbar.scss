@@ -1,0 +1,32 @@
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--surface-border);
+  background: var(--surface-card);
+
+  .toolbar-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+
+    .pin-button {
+      &:not(:disabled) {
+        ::ng-deep .pi-star-fill {
+          color: #ffc107;
+        }
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    .toolbar-actions {
+      p-button {
+        ::ng-deep .p-button-label {
+          display: none;
+        }
+      }
+    }
+  }
+}

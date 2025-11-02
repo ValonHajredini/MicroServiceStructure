@@ -1,77 +1,92 @@
 <div class="service-management-container">
-  <p-card>
-    <ng-template pTemplate="header">
-      <div class="card-header">
-        <h2>Service Management</h2>
-        <p class="subtitle">Enable the services your organization needs</p>
+  @if (loading()) {
+    <div class="loading-container">
+      <p-progressSpinner />
+      <p>Loading services...</p>
+    </div>
+  } @else {
+    @if (errorMessage()) {
+      <p-message severity="error" [text]="errorMessage()!" styleClass="mb-4" />
+    }
+
+    @if (successMessage()) {
+      <div class="success-card">
+        <p-message severity="success" [text]="successMessage()!" />
+        <div class="logout-prompt">
+          <i class="pi pi-spin pi-spinner"></i>
+          <p>Redirecting to login...</p>
+        </div>
       </div>
-    </ng-template>
+    }
 
-    <div class="content">
-      @if (loading()) {
-        <div class="loading-container">
-          <p-progressSpinner />
-          <p>Loading services...</p>
-        </div>
-      } @else {
-        @if (errorMessage()) {
-          <p-message severity="error" [text]="errorMessage()!" />
-        }
-
-        @if (successMessage()) {
-          <p-message severity="success" [text]="successMessage()!" />
-          <div class="logout-prompt">
-            <p>Would you like to log out now?</p>
-            <p-button
-              label="Log Out"
-              icon="pi pi-sign-out"
-              (onClick)="logout()"
-              styleClass="p-button-sm"
-            />
-          </div>
-        }
-
-        <div class="services-list">
-          @for (service of availableServices; track service.name) {
-            <div
-              class="service-item"
-              [class.disabled]="service.comingSoon"
-            >
-              <div class="service-checkbox">
-                <p-checkbox
-                  [binary]="true"
-                  [ngModel]="isServiceSelected(service.name)"
-                  (ngModelChange)="toggleService(service.name)"
-                  [disabled]="service.comingSoon || saving()"
-                  [inputId]="service.name"
-                />
+    <div class="services-grid">
+      @for (service of availableServices; track service.name) {
+        <p-card
+          class="service-card"
+          [ngClass]="{
+            'service-selected': isServiceSelected(service.name),
+            'service-disabled': service.comingSoon
+          }"
+          (click)="!service.comingSoon && !saving() && toggleService(service.name)"
+        >
+          <ng-template pTemplate="header">
+            <div class="service-card-header">
+              <div class="service-icon-container">
+                <i [class]="service.icon"></i>
               </div>
-              <div class="service-info">
-                <div class="service-header">
-                  <i [class]="service.icon"></i>
-                  <h3>{{ service.label }}</h3>
-                  @if (service.comingSoon) {
-                    <span class="coming-soon-badge">Coming Soon</span>
-                  }
-                </div>
-                <p class="service-description">{{ service.description }}</p>
-              </div>
+              @if (service.comingSoon) {
+                <span class="coming-soon-badge">
+                  <i class="pi pi-clock"></i>
+                  Coming Soon
+                </span>
+              }
+              @if (!service.comingSoon && isServiceSelected(service.name)) {
+                <span class="active-badge">
+                  <i class="pi pi-check-circle"></i>
+                  Active
+                </span>
+              }
             </div>
-          }
-        </div>
+          </ng-template>
 
-        @if (!successMessage()) {
-          <div class="actions">
-            <p-button
-              label="Save Changes"
-              icon="pi pi-check"
-              (onClick)="saveChanges()"
-              [loading]="saving()"
-              [disabled]="saving()"
-            />
+          <div class="service-content">
+            <h3>{{ service.label }}</h3>
+            <p class="service-description">{{ service.description }}</p>
           </div>
-        }
+
+          <ng-template pTemplate="footer">
+            <div class="service-footer" (click)="$event.stopPropagation()">
+              <p-checkbox
+                [binary]="true"
+                [ngModel]="isServiceSelected(service.name)"
+                (ngModelChange)="toggleService(service.name)"
+                [disabled]="service.comingSoon || saving()"
+                [inputId]="service.name"
+                [label]="isServiceSelected(service.name) ? 'Enabled' : 'Enable Service'"
+              />
+            </div>
+          </ng-template>
+        </p-card>
       }
     </div>
-  </p-card>
+
+    @if (!successMessage()) {
+      <div class="actions">
+        <p-button
+          label="Cancel"
+          icon="pi pi-times"
+          styleClass="p-button-text p-button-secondary"
+          (onClick)="loadTenantServices()"
+          [disabled]="saving()"
+        />
+        <p-button
+          label="Save Changes"
+          icon="pi pi-check"
+          (onClick)="saveChanges()"
+          [loading]="saving()"
+          [disabled]="saving()"
+        />
+      </div>
+    }
+  }
 </div>

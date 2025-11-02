@@ -1,0 +1,89 @@
+<div class="file-upload-container">
+  <!-- Drag & Drop Zone -->
+  <div
+    class="drop-zone"
+    [class.drag-over]="isDragOver()"
+    [class.disabled]="disabled()"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)"
+    (click)="openFilePicker()">
+
+    <i class="pi pi-cloud-upload icon"></i>
+    <p class="message">Drag files here or click to browse</p>
+    <small class="hint">Max file size: 25MB | Max total: 100MB</small>
+    <small class="hint">Supported: PDF, Word, Excel, PowerPoint, Images, Text</small>
+
+    <!-- Hidden file input -->
+    <input
+      #fileInput
+      type="file"
+      multiple
+      [accept]="ACCEPTED_FILE_TYPES"
+      [disabled]="disabled()"
+      style="display: none"
+      (change)="onFileSelected($event)" />
+  </div>
+
+  <!-- Upload Queue -->
+  <div *ngIf="uploadQueue().length > 0" class="upload-queue">
+    <div *ngFor="let upload of uploadQueue()" class="upload-item">
+      <div class="upload-header">
+        <i [class]="getStateIcon(upload) + ' ' + getStateIconClass(upload)"></i>
+        <span class="filename">{{ upload.file.name }}</span>
+        <span class="file-size">({{ (upload.file.size / 1024 / 1024).toFixed(2) }}MB)</span>
+
+        <!-- Action buttons -->
+        <div class="actions">
+          <button
+            *ngIf="upload.phase === 'failed' || upload.phase === 'Error'"
+            pButton
+            icon="pi pi-refresh"
+            class="p-button-text p-button-sm"
+            [disabled]="upload.retryCount >= MAX_RETRY_ATTEMPTS"
+            (click)="retryUpload(upload)"
+            pTooltip="Retry upload"></button>
+
+          <button
+            pButton
+            icon="pi pi-times"
+            class="p-button-text p-button-sm p-button-danger"
+            (click)="cancelUpload(upload)"
+            pTooltip="Cancel"></button>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="upload-progress" *ngIf="upload.phase !== 'queued' && upload.phase !== 'Complete' && upload.phase !== 'failed'">
+        <p-progressBar [value]="upload.progress"></p-progressBar>
+        <small class="status">{{ upload.phase }} - {{ upload.progress }}%</small>
+      </div>
+
+      <!-- Error message -->
+      <div class="error-message" *ngIf="upload.error">
+        <small class="text-red-500">{{ upload.error }}</small>
+        <small *ngIf="upload.retryCount > 0" class="retry-count">
+          (Retry {{ upload.retryCount }}/{{ MAX_RETRY_ATTEMPTS }})
+        </small>
+      </div>
+
+      <!-- Success state -->
+      <div class="success-message" *ngIf="upload.phase === 'Complete'">
+        <small class="text-green-500">Upload complete!</small>
+      </div>
+
+      <!-- Queued state -->
+      <div class="queued-message" *ngIf="upload.phase === 'queued'">
+        <small class="text-gray-500">Waiting in queue...</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Queue summary -->
+  <div *ngIf="uploadQueue().length > 0" class="queue-summary">
+    <small>
+      {{ uploadQueue().length }} file(s) in queue
+      <span *ngIf="isUploading()"> - Uploading...</span>
+    </small>
+  </div>
+</div>

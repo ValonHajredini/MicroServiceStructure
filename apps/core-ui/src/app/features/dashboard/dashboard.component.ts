@@ -115,10 +115,20 @@ export class DashboardComponent implements OnInit {
 
   openService(service: ServiceViewModel): void {
     if (service.isAvailable && !service.comingSoon && service.route) {
-      // NOTE (ARCH-001): Currently using Angular Router for single-domain navigation.
-      // If deploying services to separate subdomains (notes.mydomain.com, kanban.mydomain.com),
-      // replace this with: window.location.href = service.url;
-      this.router.navigate([service.route]);
+      // SSO (ARCH-001): Pass JWT token to micro-frontend services on different ports
+      // Each service (notes, kanban) runs on a separate port and needs authentication
+      const token = this.authService.getToken();
+
+      if (service.name === 'notes') {
+        // Redirect to notes-ui with token for SSO
+        window.location.href = `http://localhost:4201?token=${token}`;
+      } else if (service.name === 'kanban') {
+        // Redirect to kanban-ui with token for SSO
+        window.location.href = `http://localhost:4202?token=${token}`;
+      } else {
+        // Fallback to Angular router for internal routes
+        this.router.navigate([service.route]);
+      }
     }
   }
 

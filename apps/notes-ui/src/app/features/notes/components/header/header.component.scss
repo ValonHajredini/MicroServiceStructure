@@ -50,6 +50,14 @@
     }
   }
 
+  .header-center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
   .header-right {
     display: flex;
     align-items: center;
@@ -88,6 +96,10 @@
           font-size: 1.25rem;
         }
       }
+    }
+
+    .header-center {
+      display: none;
     }
 
     .header-right {
