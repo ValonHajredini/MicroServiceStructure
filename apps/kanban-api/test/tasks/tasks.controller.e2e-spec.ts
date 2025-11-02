@@ -572,6 +572,68 @@ describe("TasksController (e2e)", () => {
         })
         .expect(404);
     });
+
+    it("should reject move if user is unauthorized", async () => {
+      // Create a task assigned to a different user
+      const assignedTask = await request(app.getHttpServer())
+        .post(`/api/v1/columns/${tenantAColumnId}/tasks`)
+        .set("Authorization", `Bearer ${tenantAToken}`)
+        .send({
+          title: "Task for Unauthorized Move",
+          assignedTo: "other-user", // assigned to different user
+        });
+
+      // Try to move task as user-b (not assignee, not board owner, not admin)
+      return request(app.getHttpServer())
+        .patch(`/api/v1/tasks/${assignedTask.body.id}/move`)
+        .set("Authorization", `Bearer ${tenantATokenUserB}`)
+        .send({
+          columnId: tenantASecondColumnId,
+          position: 0,
+        })
+        .expect(403);
+    });
+
+    it("should allow move if user is board owner", async () => {
+      // Create task not assigned to anyone
+      const unassignedTask = await request(app.getHttpServer())
+        .post(`/api/v1/columns/${tenantAColumnId}/tasks`)
+        .set("Authorization", `Bearer ${tenantAToken}`)
+        .send({
+          title: "Unassigned Task",
+        });
+
+      // Board owner (user-a) should be able to move it
+      return request(app.getHttpServer())
+        .patch(`/api/v1/tasks/${unassignedTask.body.id}/move`)
+        .set("Authorization", `Bearer ${tenantAToken}`)
+        .send({
+          columnId: tenantASecondColumnId,
+          position: 0,
+        })
+        .expect(200);
+    });
+
+    it("should allow move if user is tenant admin", async () => {
+      // Create task assigned to different user
+      const assignedTask = await request(app.getHttpServer())
+        .post(`/api/v1/columns/${tenantAColumnId}/tasks`)
+        .set("Authorization", `Bearer ${tenantAToken}`)
+        .send({
+          title: "Task for Admin Move",
+          assignedTo: "other-user",
+        });
+
+      // Admin should be able to move it
+      return request(app.getHttpServer())
+        .patch(`/api/v1/tasks/${assignedTask.body.id}/move`)
+        .set("Authorization", `Bearer ${tenantATokenAdmin}`)
+        .send({
+          columnId: tenantASecondColumnId,
+          position: 0,
+        })
+        .expect(200);
+    });
   });
 
   describe("WIP Limit Enforcement", () => {

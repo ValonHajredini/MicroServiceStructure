@@ -303,6 +303,8 @@ describe("TasksService", () => {
         columnId: "new-column-uuid",
       };
 
+      boardsRepository.findOne.mockResolvedValue(mockBoard);
+
       const newColumn = {
         ...mockColumn,
         id: "new-column-uuid",
@@ -379,6 +381,7 @@ describe("TasksService", () => {
       };
 
       tasksRepository.findOne.mockResolvedValue(mockTask);
+      boardsRepository.findOne.mockResolvedValue(mockBoard); // for authorization check
       columnsRepository.findOne.mockResolvedValueOnce(mockColumn); // source
       columnsRepository.findOne.mockResolvedValueOnce(newColumn); // target
       tasksRepository.find.mockResolvedValue([]); // target column tasks
@@ -393,6 +396,8 @@ describe("TasksService", () => {
         "new-column-uuid",
         0,
         "tenant-uuid",
+        "user-uuid", // authorized as assignee
+        [],
       );
 
       expect(result.column_id).toBe("new-column-uuid");
@@ -403,8 +408,94 @@ describe("TasksService", () => {
       tasksRepository.findOne.mockResolvedValue(null);
 
       await expect(
-        service.moveTask("task-uuid", "new-column-uuid", 0, "tenant-uuid"),
+        service.moveTask(
+          "task-uuid",
+          "new-column-uuid",
+          0,
+          "tenant-uuid",
+          "user-uuid",
+          [],
+        ),
       ).rejects.toThrow(NotFoundException);
+    });
+
+    it("should throw ForbiddenException if user is not authorized", async () => {
+      tasksRepository.findOne.mockResolvedValue(mockTask);
+      boardsRepository.findOne.mockResolvedValue(mockBoard);
+
+      await expect(
+        service.moveTask(
+          "task-uuid",
+          "new-column-uuid",
+          0,
+          "tenant-uuid",
+          "unauthorized-user", // not assignee, not owner, not admin
+          [],
+        ),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it("should allow move if user is board owner", async () => {
+      const newColumn = {
+        ...mockColumn,
+        id: "new-column-uuid",
+      };
+      const taskNotAssigned = { ...mockTask, assigned_to: null };
+
+      tasksRepository.findOne.mockResolvedValue(taskNotAssigned);
+      boardsRepository.findOne.mockResolvedValue(mockBoard); // user-uuid is owner
+      columnsRepository.findOne.mockResolvedValueOnce(mockColumn); // source
+      columnsRepository.findOne.mockResolvedValueOnce(newColumn); // target
+      tasksRepository.find.mockResolvedValue([]); // target column tasks
+      tasksRepository.save.mockResolvedValue({
+        ...taskNotAssigned,
+        column_id: "new-column-uuid",
+        position: 0,
+      });
+
+      const result = await service.moveTask(
+        "task-uuid",
+        "new-column-uuid",
+        0,
+        "tenant-uuid",
+        "user-uuid", // authorized as board owner
+        [],
+      );
+
+      expect(result.column_id).toBe("new-column-uuid");
+    });
+
+    it("should allow move if user is admin", async () => {
+      const newColumn = {
+        ...mockColumn,
+        id: "new-column-uuid",
+      };
+      const taskNotAssigned = { ...mockTask, assigned_to: null };
+
+      tasksRepository.findOne.mockResolvedValue(taskNotAssigned);
+      boardsRepository.findOne.mockResolvedValue({
+        ...mockBoard,
+        owner_id: "other-owner",
+      }); // different owner
+      columnsRepository.findOne.mockResolvedValueOnce(mockColumn); // source
+      columnsRepository.findOne.mockResolvedValueOnce(newColumn); // target
+      tasksRepository.find.mockResolvedValue([]); // target column tasks
+      tasksRepository.save.mockResolvedValue({
+        ...taskNotAssigned,
+        column_id: "new-column-uuid",
+        position: 0,
+      });
+
+      const result = await service.moveTask(
+        "task-uuid",
+        "new-column-uuid",
+        0,
+        "tenant-uuid",
+        "admin-user",
+        ["admin"], // authorized as admin
+      );
+
+      expect(result.column_id).toBe("new-column-uuid");
     });
 
     it("should throw BadRequestException if columns belong to different boards", async () => {
@@ -414,11 +505,19 @@ describe("TasksService", () => {
       };
 
       tasksRepository.findOne.mockResolvedValue(mockTask);
+      boardsRepository.findOne.mockResolvedValue(mockBoard);
       columnsRepository.findOne.mockResolvedValueOnce(mockColumn); // source
       columnsRepository.findOne.mockResolvedValueOnce(differentBoardColumn); // target
 
       await expect(
-        service.moveTask("task-uuid", "new-column-uuid", 0, "tenant-uuid"),
+        service.moveTask(
+          "task-uuid",
+          "new-column-uuid",
+          0,
+          "tenant-uuid",
+          "user-uuid",
+          [],
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -432,6 +531,7 @@ describe("TasksService", () => {
       const existingTask2 = { ...mockTask, id: "task-2", position: 1 };
 
       tasksRepository.findOne.mockResolvedValue(mockTask);
+      boardsRepository.findOne.mockResolvedValue(mockBoard);
       columnsRepository.findOne.mockResolvedValueOnce(mockColumn); // source
       columnsRepository.findOne.mockResolvedValueOnce(newColumn); // target
       tasksRepository.find.mockResolvedValue([existingTask1, existingTask2]);
@@ -441,7 +541,14 @@ describe("TasksService", () => {
         position: 0,
       });
 
-      await service.moveTask("task-uuid", "new-column-uuid", 0, "tenant-uuid");
+      await service.moveTask(
+        "task-uuid",
+        "new-column-uuid",
+        0,
+        "tenant-uuid",
+        "user-uuid",
+        [],
+      );
 
       // Should have shifted existing tasks
       expect(tasksRepository.save).toHaveBeenCalledWith(

@@ -135,7 +135,14 @@ export class TasksService {
       updateTaskDto.columnId !== undefined &&
       updateTaskDto.columnId !== task.column_id
     ) {
-      await this.moveTask(id, updateTaskDto.columnId, task.position, _tenantId);
+      await this.moveTask(
+        id,
+        updateTaskDto.columnId,
+        task.position,
+        _tenantId,
+        userId,
+        userRoles,
+      );
       // Reload task to get updated position
       const updatedTask = await this.tasksRepository.findOne({
         where: { id, status: TaskStatus.ACTIVE } as any,
@@ -186,6 +193,8 @@ export class TasksService {
     targetColumnId: string,
     newPosition: number,
     _tenantId: string,
+    userId: string,
+    userRoles: string[],
   ): Promise<TaskEntity> {
     // Verify both columns belong to same board and tenant
     const task = await this.tasksRepository.findOne({
@@ -194,6 +203,22 @@ export class TasksService {
 
     if (!task) {
       throw new NotFoundException(`Task with ID ${taskId} not found`);
+    }
+
+    // Check authorization: task assignee, board owner, or tenant admin
+    const isAssignee = task.assigned_to === userId;
+    const isAdmin = userRoles.includes("admin");
+
+    // Get board to check ownership
+    const board = await this.boardsRepository.findOne({
+      where: { id: task.board_id } as any,
+    });
+    const isBoardOwner = board?.owner_id === userId;
+
+    if (!isAssignee && !isBoardOwner && !isAdmin) {
+      throw new ForbiddenException(
+        "You do not have permission to move this task",
+      );
     }
 
     const sourceColumn = await this.columnsRepository.findOne({

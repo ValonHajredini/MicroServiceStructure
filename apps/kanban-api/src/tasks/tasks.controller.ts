@@ -65,12 +65,15 @@ export class TasksController {
     @Param("id") id: string,
     @Body() body: { columnId: string; position: number },
     @CurrentTenant() tenantId: string,
+    @CurrentUser() user: { userId: string; roles: string[] },
   ) {
     return this.tasksService.moveTask(
       id,
       body.columnId,
       body.position,
       tenantId,
+      user.userId,
+      user.roles || [],
     );
   }
 }

@@ -2,65 +2,44 @@
 schema: 1
 story: "4.4"
 story_title: "Kanban API - Task CRUD Operations"
-gate: CONCERNS
-status_reason: "Functionally complete with excellent test coverage (16 unit + 29 e2e tests), but missing critical authorization check for task movement operation (AUTH-001)."
+gate: PASS
+status_reason: "All acceptance criteria fully implemented with excellent test coverage (19 unit + 32 e2e tests). AUTH-001 fix verified - authorization properly enforced for all task modification operations including moveTask."
 reviewer: "Quinn (Test Architect)"
-updated: "2025-01-30T15:00:00Z"
+updated: "2025-02-11T16:00:00Z"
 
-# Critical gap identified
-top_issues:
-  - id: "AUTH-001"
-    severity: high
-    finding: "Missing authorization check in moveTask operation"
-    details: "The PATCH /tasks/:id/move endpoint and TasksService.moveTask() method do not verify user authorization before allowing task movement. According to AC 7, only task assignee, board owner, or tenant admin should be able to modify tasks. Moving a task is a modification operation (updates column_id and position)."
-    suggested_action: "Add authorization check to moveTask() method verifying user is assignee, board owner, or admin. Update controller endpoint to include @CurrentUser() and @Roles() decorators. Add e2e test for unauthorized move attempt."
-    refs:
-      - "apps/kanban-api/src/tasks/tasks.service.ts:184-249 (moveTask method)"
-      - "apps/kanban-api/src/tasks/tasks.controller.ts:63-75 (moveTask endpoint)"
-      - "docs/stories/4.4.story.md:34 (AC 7)"
-    suggested_owner: "dev"
+# Issues resolved
+top_issues: []  # All critical issues resolved - AUTH-001 fixed and verified
 
-  - id: "MAINT-001"
-    severity: low
-    finding: "Duplicate authorization logic across methods"
-    details: "Authorization pattern (assignee OR board owner OR admin) is duplicated in update(), remove(), and should be in moveTask(). Consider extracting to shared helper method for DRY principle."
-    suggested_action: "Extract authorization check to private helper method (e.g., canModifyTask()) for reuse across update, remove, and moveTask methods."
-    refs:
-      - "apps/kanban-api/src/tasks/tasks.service.ts:98-112 (update authorization)"
-      - "apps/kanban-api/src/tasks/tasks.service.ts:163-177 (remove authorization)"
-    suggested_owner: "dev"
+# Previously identified issues (now resolved):
+# AUTH-001: Missing authorization check in moveTask operation
+# Status: ✅ RESOLVED (2025-02-11)
+# Resolution: Authorization check added to moveTask() method (lines 208-222), controller updated with @CurrentUser() decorator, comprehensive tests added (3 unit + 3 e2e authorization tests). All tests passing.
 
-  - id: "VAL-001"
-    severity: low
-    finding: "Missing validation for moveTask request body"
-    details: "PATCH /tasks/:id/move endpoint accepts body with columnId and position but no validation decorators are applied. Should validate columnId is UUID and position is number."
-    suggested_action: "Create MoveTaskDto with @IsUUID() and @IsNumber() decorators, or add inline validation to ensure data integrity."
-    refs:
-      - "apps/kanban-api/src/tasks/tasks.controller.ts:66 (moveTask body parameter)"
-    suggested_owner: "dev"
+# Low priority recommendations (not blocking):
+# MAINT-001: Extract authorization logic to shared helper method (low priority) - Can be addressed in future refinement
+# VAL-001: Add validation for moveTask request body (low priority) - Can be addressed in future refinement
 
 waiver: { active: false }
 
 # Quality metrics
-quality_score: 85  # 100 - (20 for high AUTH-001) - (0 for low severity issues) = 85
-expires: "2025-02-13T00:00:00Z"
+quality_score: 95  # 100 - (0 for resolved issues) - (5 for minor low-priority recommendations) = 95
+expires: "2025-02-25T00:00:00Z"
 
 # Evidence from comprehensive review
 evidence:
-  tests_reviewed: 45  # 16 unit tests + 29 e2e tests (all passing)
+  tests_reviewed: 51  # 19 unit tests + 32 e2e tests (all passing)
   risks_identified: 3
   files_reviewed: 8
   trace:
-    ac_covered: [1, 2, 3, 4, 5, 6]  # All ACs implemented
-    ac_gaps: [7]  # AC 7 partially met (authorization missing for move)
-    test_coverage_gaps:
-      - "E2E test for unauthorized moveTask attempt (not testable until authorization added)"
+    ac_covered: [1, 2, 3, 4, 5, 6, 7]  # All 7 ACs fully implemented
+    ac_gaps: []  # All ACs fully implemented - AC 7 authorization complete
+    test_coverage_gaps: []  # All test coverage gaps resolved - authorization tests added
 
 # NFR Assessment
 nfr_validation:
   security:
-    status: CONCERNS
-    notes: "AUTH-001: Missing authorization check for moveTask operation allows any authenticated tenant user to move any task, violating AC 7. Create, update, and delete operations properly enforce authorization (assignee/board owner/admin). Tenant isolation enforced via BaseTenantRepository."
+    status: PASS
+    notes: "✅ AUTH-001 RESOLVED: Authorization check properly implemented for moveTask operation (lines 208-222). All task modification operations (create, update, delete, move) now consistently enforce authorization (assignee/board owner/admin). Tenant isolation enforced via BaseTenantRepository. Comprehensive authorization test coverage (6 unit + 9 e2e authorization tests)."
   performance:
     status: PASS
     notes: "Efficient position queries using single query with ORDER BY. Position adjustment in moveTask uses targeted updates (only affected tasks). Proper indexes on tenant_id, column_id, position. No N+1 query patterns."
@@ -69,23 +48,19 @@ nfr_validation:
     notes: "Proper error handling with appropriate exceptions (NotFoundException, ForbiddenException, BadRequestException). Tenant isolation enforced automatically via BaseTenantRepository. Soft delete prevents data loss. Position adjustment logic handles edge cases correctly."
   maintainability:
     status: PASS
-    notes: "Clean service architecture with proper separation of concerns. Comprehensive test coverage (45 tests total). Good code documentation. Minor duplication in authorization logic (MAINT-001) but overall maintainable."
+    notes: "Clean service architecture with proper separation of concerns. Comprehensive test coverage (51 tests total). Good code documentation. Minor duplication in authorization logic (MAINT-001) but overall maintainable."
 
 # Risk Summary
 risk_summary:
   totals:
     critical: 0
-    high: 1  # AUTH-001
+    high: 0  # AUTH-001 RESOLVED
     medium: 0
-    low: 2  # MAINT-001, VAL-001
+    low: 2  # MAINT-001, VAL-001 (low priority, can be addressed later)
   highest_identified:
-    - "Missing authorization for moveTask allows unauthorized task modifications"
-    - "Minor code duplication in authorization checks"
+    - "✅ RESOLVED: Authorization for moveTask implemented and verified"
   recommendations:
-    must_fix:
-      - "Add authorization check to moveTask() method (AUTH-001)"
-      - "Update controller endpoint with @CurrentUser() and @Roles() decorators"
-      - "Add e2e test for unauthorized move attempt"
+    must_fix: []  # All critical issues resolved
     monitor:
       - "Verify authorization enforcement across all task modification operations"
       - "Monitor position adjustment performance with large task lists"
@@ -95,11 +70,11 @@ recommendations:
   immediate:  # Must fix before production
     - action: "Add authorization check to moveTask operation"
       refs:
-        - "apps/kanban-api/src/tasks/tasks.service.ts:184-249"
-        - "apps/kanban-api/src/tasks/tasks.controller.ts:63-75"
+        - "apps/kanban-api/src/tasks/tasks.service.ts:208-222"
+        - "apps/kanban-api/src/tasks/tasks.controller.ts:68"
       priority: high
-      status: PENDING
-      details: "Verify user is assignee, board owner, or admin before allowing task movement. Use same authorization pattern as update/remove methods."
+      status: COMPLETED
+      details: "✅ RESOLVED (2025-02-11): Authorization check added to moveTask() method verifying user is assignee, board owner, or admin. Controller updated with @CurrentUser() decorator. Comprehensive tests added (3 unit + 3 e2e authorization tests). All tests passing."
 
   future:  # Can be addressed later
     - action: "Extract authorization logic to shared helper method"
@@ -181,23 +156,24 @@ requirements_traceability:
       - "tasks.controller.ts:63-75"
 
   AC_7_authorization:
-    status: PARTIALLY_IMPLEMENTED
-    test_coverage: PARTIAL
+    status: FULLY_IMPLEMENTED
+    test_coverage: COMPLETE
     tests:
-      - "tasks.service.spec.ts (authorization tests for update/remove)"
-      - "tasks.controller.e2e-spec.ts (authorization tests for update/delete)"
-    missing_tests:
-      - "E2E test for unauthorized moveTask attempt"
+      - "tasks.service.spec.ts (authorization tests for update/remove/moveTask - 6 tests)"
+      - "tasks.controller.e2e-spec.ts (authorization tests for update/delete/moveTask - 9 tests)"
     implementation:
       - "tasks.service.ts:98-112 (update authorization) ✓"
       - "tasks.service.ts:163-177 (remove authorization) ✓"
-      - "tasks.service.ts:184-249 (moveTask authorization) ✗ MISSING"
-    gaps:
-      - "moveTask() method does not check authorization before allowing task movement"
+      - "tasks.service.ts:208-222 (moveTask authorization) ✅ IMPLEMENTED"
+    verification:
+      - "Authorization check properly verifies assignee, board owner, or admin"
+      - "All modification operations consistently enforce authorization"
+      - "Comprehensive test coverage for all authorization scenarios"
 
 # Strengths Worth Highlighting
 strengths:
-  - "Comprehensive test coverage: 16 unit tests + 29 e2e tests (all passing)"
+  - "Comprehensive test coverage: 19 unit tests + 32 e2e tests (all passing)"
+  - "✅ Authorization fully implemented for all task modification operations"
   - "All 6 functional acceptance criteria (AC 1-6) fully implemented and tested"
   - "Proper use of BaseTenantRepository for automatic tenant isolation"
   - "Clean service architecture following NestJS best practices"
@@ -210,15 +186,14 @@ strengths:
 
 # Final Assessment
 final_assessment:
-  gate_decision: CONCERNS
+  gate_decision: PASS
   confidence_level: HIGH
-  production_ready: false
-  blockers:
-    - "Missing authorization check for moveTask operation (AUTH-001)"
-  technical_debt: "Low - minor duplication in authorization logic"
-  recommended_next_action: "Add authorization check to moveTask() method and corresponding e2e test, then re-submit for QA review"
-  notes: "Core implementation is excellent with comprehensive test coverage. The missing authorization for moveTask is a security concern that must be addressed. Once fixed, this story will be production-ready."
-  estimated_effort_to_pass: "1-2 hours"
+  production_ready: true
+  blockers: []
+  technical_debt: "Low - minor duplication in authorization logic (MAINT-001), missing request body validation (VAL-001). Both are low priority and can be addressed in future iterations."
+  recommended_next_action: "Story is production-ready. Can proceed to Done status. Optional: consider extracting authorization helper method (MAINT-001) and adding MoveTaskDto validation (VAL-001) in future refinement."
+  notes: "✅ Excellent implementation with comprehensive test coverage. All acceptance criteria fully satisfied. Authorization properly enforced across all operations. AUTH-001 fix verified and tested. Production-ready."
+  quality_score: 95
 
 # Audit trail
 history:
@@ -233,3 +208,19 @@ history:
       - "Add authorization check to moveTask() method"
       - "Update controller with @CurrentUser() and @Roles() decorators"
       - "Add e2e test for unauthorized move attempt"
+  - at: "2025-02-11T16:00:00Z"
+    gate: PASS
+    quality_score: 95
+    reviewer: "Quinn (Test Architect)"
+    note: "Re-review after AUTH-001 fix - ✅ Authorization check properly implemented in moveTask() method (lines 208-222). Controller updated with @CurrentUser() decorator. Comprehensive tests added (3 unit + 3 e2e authorization tests). All tests passing (19 unit + 32 e2e = 51 total). All acceptance criteria fully satisfied. Production-ready."
+    issues_found: 0
+    test_coverage: "Unit: 19 tests, E2E: 32 tests (all passing)"
+    improvements_applied:
+      - "✅ Authorization check added to moveTask() method"
+      - "✅ Controller endpoint updated with @CurrentUser() decorator"
+      - "✅ Unit tests added for moveTask authorization (3 tests)"
+      - "✅ E2E tests added for moveTask authorization (3 tests)"
+    verification:
+      - "Authorization pattern matches update() and remove() methods"
+      - "Internal moveTask call from update() properly passes authorization"
+      - "All authorization scenarios tested (unauthorized, assignee, board owner, admin)"
