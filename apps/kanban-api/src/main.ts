@@ -2,6 +2,8 @@ import { Logger, ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { TenantContextMiddleware } from "./common/middleware/tenant-context.middleware";
+import { TransformInterceptor } from "./common/interceptors/transform.interceptor";
+import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -16,6 +18,12 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  // Apply global transform interceptor for standard response format
+  app.useGlobalInterceptors(new TransformInterceptor());
+
+  // Apply global exception filter
+  app.useGlobalFilters(new HttpExceptionFilter());
 
   const port = process.env.PORT ? Number(process.env.PORT) : 3003;
   await app.listen(port);

@@ -19,12 +19,18 @@ export enum TaskPriority {
   LOW = "low",
 }
 
+export enum TaskStatus {
+  ACTIVE = "active",
+  DELETED = "deleted",
+}
+
 @Entity({ name: "tasks" })
 @Index("idx_tasks_tenant_id", ["tenant_id"])
 @Index("idx_tasks_column_id", ["column_id"])
 @Index("idx_tasks_board_id", ["board_id"])
 @Index("idx_tasks_assigned_to", ["assigned_to"])
 @Index("idx_tasks_column_position", ["column_id", "position"])
+@Index("idx_tasks_status", ["status"])
 export class TaskEntity {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
@@ -59,6 +65,13 @@ export class TaskEntity {
 
   @Column({ type: "integer" })
   position!: number;
+
+  @Column({
+    type: "varchar",
+    length: 20,
+    default: TaskStatus.ACTIVE,
+  })
+  status!: TaskStatus;
 
   @CreateDateColumn({ type: "timestamp with time zone" })
   created_at!: Date;

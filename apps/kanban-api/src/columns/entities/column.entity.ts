@@ -12,10 +12,16 @@ import {
 import { BoardEntity } from "../../boards/entities/board.entity";
 import { TaskEntity } from "../../tasks/entities/task.entity";
 
+export enum ColumnStatus {
+  ACTIVE = "active",
+  DELETED = "deleted",
+}
+
 @Entity({ name: "columns" })
 @Index("idx_columns_tenant_id", ["tenant_id"])
 @Index("idx_columns_board_id", ["board_id"])
 @Index("idx_columns_board_position", ["board_id", "position"])
+@Index("idx_columns_status", ["status"])
 export class ColumnEntity {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
@@ -34,6 +40,13 @@ export class ColumnEntity {
 
   @Column({ type: "integer", nullable: true })
   wip_limit?: number | null;
+
+  @Column({
+    type: "varchar",
+    length: 20,
+    default: ColumnStatus.ACTIVE,
+  })
+  status!: ColumnStatus;
 
   @CreateDateColumn({ type: "timestamp with time zone" })
   created_at!: Date;
