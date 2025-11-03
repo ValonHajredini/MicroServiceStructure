@@ -266,7 +266,7 @@ export class ColumnsService {
     }
 
     // Update position values based on new order
-    const updatedColumns = [];
+    const updatedColumns: ColumnEntity[] = [];
     for (let i = 0; i < columnIds.length; i++) {
       const column = boardColumns.find((col) => col.id === columnIds[i]);
       if (column && column.position !== i) {

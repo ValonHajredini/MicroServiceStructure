@@ -1,0 +1,31 @@
+.form-field {
+  margin-bottom: 1.5rem;
+
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #1e293b;
+
+    .required {
+      color: #dc2626;
+    }
+  }
+
+  input, textarea {
+    width: 100%;
+  }
+
+  .error {
+    display: block;
+    margin-top: 0.25rem;
+    color: #dc2626;
+  }
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 2rem;
+}

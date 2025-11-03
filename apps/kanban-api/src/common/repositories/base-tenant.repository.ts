@@ -81,7 +81,10 @@ export abstract class BaseTenantRepository<T extends TenantScopedEntity> {
 
   async update(id: string, partial: Partial<T>): Promise<void> {
     const tenant_id = this.getTenantId();
-    await this.repository.update({ id, tenant_id } as any, partial);
+    await this.repository.update(
+      { id, tenant_id } as any,
+      partial as any,
+    );
   }
 
   async softDelete(id: string): Promise<void> {

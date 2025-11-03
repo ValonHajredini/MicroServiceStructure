@@ -1,0 +1,48 @@
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <div class="form-field">
+    <label for="name">Board Name <span class="required">*</span></label>
+    <input
+      pInputText
+      id="name"
+      formControlName="name"
+      placeholder="Enter board name"
+      [class.ng-invalid]="form.get('name')?.invalid && form.get('name')?.touched"
+    />
+    @if (form.get('name')?.hasError('required') && form.get('name')?.touched) {
+      <small class="error">Board name is required</small>
+    }
+    @if (form.get('name')?.hasError('maxlength')) {
+      <small class="error">Board name must be less than 255 characters</small>
+    }
+  </div>
+
+  <div class="form-field">
+    <label for="description">Description</label>
+    <textarea
+      pInputTextarea
+      id="description"
+      formControlName="description"
+      placeholder="Enter board description (optional)"
+      rows="4"
+      [class.ng-invalid]="form.get('description')?.invalid && form.get('description')?.touched"
+    ></textarea>
+    @if (form.get('description')?.hasError('maxlength')) {
+      <small class="error">Description must be less than 1000 characters</small>
+    }
+  </div>
+
+  <div class="actions">
+    <p-button
+      label="Cancel"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="cancel()"
+      [disabled]="submitting"
+    />
+    <p-button
+      label="Create Board"
+      type="submit"
+      [loading]="submitting"
+    />
+  </div>
+</form>

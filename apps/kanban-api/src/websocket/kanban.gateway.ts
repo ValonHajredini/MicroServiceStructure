@@ -32,14 +32,20 @@ export class KanbanGateway
   @WebSocketServer()
   server: Server;
 
-  private readonly logger = new Logger(KanbanGateway.name);
+  private logger: Logger;
 
   constructor(
     private readonly jwtService: JwtService,
     private readonly boardsService: BoardsService,
-  ) {}
+  ) {
+    this.logger = new Logger(KanbanGateway.name);
+  }
 
   afterInit(server: Server) {
+    // Initialize logger if not already initialized
+    if (!this.logger) {
+      this.logger = new Logger(KanbanGateway.name);
+    }
     this.logger.log("WebSocket Gateway initialized");
 
     /**

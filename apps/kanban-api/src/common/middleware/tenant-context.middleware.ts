@@ -17,7 +17,7 @@ export class TenantContextMiddleware implements NestMiddleware {
 
   use(req: TenantRequest, _res: Response, next: NextFunction): void {
     const existingTenant = (req.user as any)?.tenantId ?? req.tenantId;
-    const existingUserId = (req.user as any)?.userId ?? req.user?.userId;
+    const existingUserId = (req.user as any)?.userId ?? (req.user as any)?.userId;
 
     if (!existingTenant) {
       const bearer = req.headers.authorization;

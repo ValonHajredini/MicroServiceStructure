@@ -1,0 +1,66 @@
+<div class="board-list-container">
+  <header class="header">
+    <h1>My Kanban Boards</h1>
+    <p-button
+      label="Create New Board"
+      icon="pi pi-plus"
+      (onClick)="createBoard()"
+    />
+  </header>
+
+  @if (loading()) {
+    <!-- Loading State -->
+    <div class="board-grid">
+      @for (item of [1,2,3,4]; track item) {
+        <p-card>
+          <p-skeleton width="100%" height="150px" />
+          <p-skeleton width="60%" height="1.5rem" styleClass="p-mt-3" />
+          <p-skeleton width="100%" height="3rem" styleClass="p-mt-2" />
+        </p-card>
+      }
+    </div>
+  } @else if (boards().length === 0) {
+    <!-- Empty State -->
+    <div class="empty-state">
+      <i class="pi pi-inbox"></i>
+      <h2>No Boards Yet</h2>
+      <p>Create your first board to start managing tasks</p>
+      <p-button
+        label="Create Your First Board"
+        icon="pi pi-plus"
+        (onClick)="createBoard()"
+      />
+    </div>
+  } @else {
+    <!-- Board Grid -->
+    <div class="board-grid">
+      @for (board of boards(); track board.id) {
+        <p-card
+          [styleClass]="'board-card'"
+          (click)="openBoard(board)"
+        >
+          <ng-template pTemplate="header">
+            <div class="card-header">
+              <i class="pi pi-table"></i>
+            </div>
+          </ng-template>
+
+          <h2>{{ board.name }}</h2>
+          <p class="description">{{ board.description || 'No description' }}</p>
+
+          <ng-template pTemplate="footer">
+            <div class="card-footer">
+              <span class="task-count">
+                <i class="pi pi-check-square"></i>
+                {{ board.taskCount || 0 }} tasks
+              </span>
+              <span class="updated-date">
+                Updated {{ formatDate(board.updated_at) }}
+              </span>
+            </div>
+          </ng-template>
+        </p-card>
+      }
+    </div>
+  }
+</div>

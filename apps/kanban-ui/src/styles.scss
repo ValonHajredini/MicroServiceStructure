@@ -1,0 +1,20 @@
+/* PrimeIcons */
+@import 'primeicons/primeicons.css';
+
+// Global styles
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #f8f9fa;
+}
+
+// Utility classes
+.p-mt-2 { margin-top: 0.5rem; }
+.p-mt-3 { margin-top: 1rem; }
+.p-mb-2 { margin-bottom: 0.5rem; }
+.p-mb-3 { margin-bottom: 1rem; }

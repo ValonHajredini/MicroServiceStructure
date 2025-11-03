@@ -1,0 +1,64 @@
+<div class="board-view-container">
+  @if (loading()) {
+    <!-- Loading State -->
+    <div class="loading-state">
+      <p-skeleton width="300px" height="3rem" />
+      <p-skeleton width="200px" height="1.5rem" styleClass="p-mt-2" />
+      <div class="columns-skeleton p-mt-4">
+        @for (item of [1,2,3]; track item) {
+          <p-skeleton width="300px" height="400px" />
+        }
+      </div>
+    </div>
+  } @else if (board()) {
+    <!-- Board Header -->
+    <header class="board-header">
+      <div class="header-left">
+        <p-button
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          [text]="true"
+          (onClick)="goBack()"
+        />
+        <div class="board-info">
+          <h1>{{ board()!.name }}</h1>
+          @if (board()!.description) {
+            <p>{{ board()!.description }}</p>
+          }
+        </div>
+      </div>
+      <div class="header-actions">
+        <p-button
+          label="Add Column"
+          icon="pi pi-plus"
+          severity="secondary"
+          [outlined]="true"
+          [disabled]="true"
+          pTooltip="Coming in Story 4.8"
+        />
+      </div>
+    </header>
+
+    <!-- Board Columns -->
+    @if (board()!.columns && board()!.columns!.length > 0) {
+      <div class="columns-container">
+        @for (column of board()!.columns; track column.id) {
+          <app-column [column]="column" />
+        }
+      </div>
+    } @else {
+      <!-- Empty State -->
+      <div class="empty-state">
+        <i class="pi pi-columns"></i>
+        <h2>No Columns Yet</h2>
+        <p>Add your first column to start organizing tasks</p>
+        <p-button
+          label="Add Column"
+          icon="pi pi-plus"
+          [disabled]="true"
+          pTooltip="Coming in Story 4.8"
+        />
+      </div>
+    }
+  }
+</div>

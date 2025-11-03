@@ -1,6 +1,6 @@
 {
   "name": "@microservice/ui-common",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Shared Angular UI components and utilities for microservice applications",
   "peerDependencies": {
     "@angular/common": "^20.3.0",
@@ -8,7 +8,8 @@
     "@angular/router": "^20.3.0",
     "primeng": "^20.3.0",
     "primeicons": "^7.0.0",
-    "rxjs": "~7.8.0"
+    "rxjs": "~7.8.0",
+    "@auth0/angular-jwt": "^5.2.0"
   },
   "dependencies": {
     "tslib": "^2.3.0"
@@ -24,6 +25,10 @@
     "angular",
     "primeng",
     "shared-components",
-    "ui-library"
+    "ui-library",
+    "authentication",
+    "jwt",
+    "auth-guards",
+    "http-interceptor"
   ]
 }

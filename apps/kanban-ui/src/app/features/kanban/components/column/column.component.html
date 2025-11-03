@@ -1,0 +1,40 @@
+<div class="column-container">
+  <div class="column-header">
+    <h3>{{ column.title }}</h3>
+    <div class="column-meta">
+      <p-badge
+        [value]="column.tasks?.length || 0"
+        severity="info"
+      />
+      @if (column.wip_limit) {
+        <span class="wip-limit">
+          / {{ column.wip_limit }} WIP
+        </span>
+      }
+    </div>
+  </div>
+
+  <div class="tasks-container">
+    @if (column.tasks && column.tasks.length > 0) {
+      @for (task of column.tasks; track task.id) {
+        <p-card [styleClass]="'task-card'">
+          <h4>{{ task.title }}</h4>
+          @if (task.description) {
+            <p class="task-description">{{ task.description }}</p>
+          }
+          @if (task.due_date) {
+            <div class="task-meta">
+              <i class="pi pi-calendar"></i>
+              <span>{{ formatDate(task.due_date) }}</span>
+            </div>
+          }
+        </p-card>
+      }
+    } @else {
+      <div class="empty-column">
+        <i class="pi pi-inbox"></i>
+        <p>No tasks</p>
+      </div>
+    }
+  </div>
+</div>
