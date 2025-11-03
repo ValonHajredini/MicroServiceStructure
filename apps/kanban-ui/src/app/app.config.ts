@@ -1,8 +1,11 @@
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideAnimations } from '@angular/platform-browser/animations';
+import { providePrimeNG } from 'primeng/config';
 import { MessageService } from 'primeng/api';
 import { DialogService } from 'primeng/dynamicdialog';
+import Aura from '@primeng/themes/aura';
 
 import { routes } from './app.routes';
 import {
@@ -17,9 +20,18 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
+    provideAnimations(),
     provideHttpClient(
       withInterceptors([authInterceptor])
     ),
+    providePrimeNG({
+      theme: {
+        preset: Aura,
+        options: {
+          darkModeSelector: false
+        }
+      }
+    }),
 
     // PrimeNG Services
     MessageService,
@@ -29,7 +41,7 @@ export const appConfig: ApplicationConfig = {
     {
       provide: AUTH_CONFIG,
       useValue: {
-        tokenKey: 'kanban_token',
+        tokenKey: 'auth_token', // Use same key as core-ui for SSO token sharing
         apiUrl: environment.apiUrl,
         ssoEnabled: true,
         loginUrl: `${environment.coreUiUrl}/login`

@@ -237,4 +237,92 @@ describe('ColumnComponent', () => {
       expect(content).toContain('5');
     });
   });
+
+  describe('keyboard navigation', () => {
+    beforeEach(() => {
+      component.column = mockColumn;
+      fixture.detectChanges();
+    });
+
+    it('should handle navigate up event', () => {
+      spyOn<any>(component, 'focusTaskAtIndex');
+      component.onNavigateUp(1);
+      expect(component['focusTaskAtIndex']).toHaveBeenCalledWith(0);
+    });
+
+    it('should not navigate up from first task', () => {
+      spyOn<any>(component, 'focusTaskAtIndex');
+      component.onNavigateUp(0);
+      expect(component['focusTaskAtIndex']).not.toHaveBeenCalled();
+    });
+
+    it('should handle navigate down event', () => {
+      spyOn<any>(component, 'focusTaskAtIndex');
+      component.onNavigateDown(0);
+      expect(component['focusTaskAtIndex']).toHaveBeenCalledWith(1);
+    });
+
+    it('should not navigate down from last task', () => {
+      spyOn<any>(component, 'focusTaskAtIndex');
+      component.onNavigateDown(1);
+      expect(component['focusTaskAtIndex']).not.toHaveBeenCalled();
+    });
+
+    it('should emit taskMoved when moving task up', () => {
+      spyOn(component.taskMoved, 'emit');
+      component.onMoveTaskUp(1);
+      expect(component.taskMoved.emit).toHaveBeenCalledWith(jasmine.objectContaining({
+        taskId: 'task-2',
+        targetPosition: 0,
+        sourcePosition: 1
+      }));
+    });
+
+    it('should emit taskMoved when moving task down', () => {
+      spyOn(component.taskMoved, 'emit');
+      component.onMoveTaskDown(0);
+      expect(component.taskMoved.emit).toHaveBeenCalledWith(jasmine.objectContaining({
+        taskId: 'task-1',
+        targetPosition: 1,
+        sourcePosition: 0
+      }));
+    });
+
+    it('should not move task up when already at top', () => {
+      spyOn(component.taskMoved, 'emit');
+      component.onMoveTaskUp(0);
+      expect(component.taskMoved.emit).not.toHaveBeenCalled();
+    });
+
+    it('should not move task down when already at bottom', () => {
+      spyOn(component.taskMoved, 'emit');
+      component.onMoveTaskDown(1);
+      expect(component.taskMoved.emit).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('loading state management', () => {
+    beforeEach(() => {
+      component.column = mockColumn;
+      fixture.detectChanges();
+    });
+
+    it('should set task loading state using signal.update', () => {
+      component.setTaskLoading('task-1', true);
+      expect(component.isTaskLoading('task-1')).toBe(true);
+    });
+
+    it('should clear task loading state using signal.update', () => {
+      component.setTaskLoading('task-1', true);
+      component.setTaskLoading('task-1', false);
+      expect(component.isTaskLoading('task-1')).toBe(false);
+    });
+
+    it('should handle multiple loading tasks', () => {
+      component.setTaskLoading('task-1', true);
+      component.setTaskLoading('task-2', true);
+      expect(component.isTaskLoading('task-1')).toBe(true);
+      expect(component.isTaskLoading('task-2')).toBe(true);
+    });
+  });
 });

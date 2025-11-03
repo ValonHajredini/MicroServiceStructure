@@ -16,6 +16,14 @@ export class TenantContextMiddleware implements NestMiddleware {
   constructor(private readonly jwtService: JwtService) {}
 
   use(req: TenantRequest, _res: Response, next: NextFunction): void {
+    // Skip tenant validation for public routes (Swagger docs, health checks, etc.)
+    const publicPaths = ['/api/docs', '/api-json', '/health'];
+    const isPublicPath = publicPaths.some(path => req.path.startsWith(path));
+
+    if (isPublicPath) {
+      return next();
+    }
+
     const existingTenant = (req.user as any)?.tenantId ?? req.tenantId;
     const existingUserId = (req.user as any)?.userId ?? (req.user as any)?.userId;
 

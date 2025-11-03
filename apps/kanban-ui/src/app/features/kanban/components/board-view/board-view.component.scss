@@ -118,3 +118,33 @@
     overflow-x: visible;
   }
 }
+
+// Column creation dialog styles
+.column-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0.5rem 0;
+
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    label {
+      font-weight: 600;
+      color: #334155;
+      font-size: 0.875rem;
+
+      .required {
+        color: #ef4444;
+      }
+    }
+
+    .field-help {
+      color: #64748b;
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+    }
+  }
+}

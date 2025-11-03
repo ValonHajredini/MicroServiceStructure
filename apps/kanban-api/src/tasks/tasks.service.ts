@@ -35,6 +35,7 @@ export class TasksService {
     const column = await this.columnsRepository.findOne({
       where: {
         id: columnId,
+        tenant_id: tenantId,
         status: ColumnStatus.ACTIVE,
       } as any,
     });
@@ -50,6 +51,7 @@ export class TasksService {
     const existingTasks = await this.tasksRepository.find({
       where: {
         column_id: columnId,
+        tenant_id: tenantId,
         status: TaskStatus.ACTIVE,
       } as any,
       order: { position: "DESC" },
@@ -61,6 +63,7 @@ export class TasksService {
 
     // Create task with tenant_id, board_id, column_id
     const task = await this.tasksRepository.save({
+      tenant_id: tenantId,
       column_id: columnId,
       board_id: boardId,
       title: createTaskDto.title,

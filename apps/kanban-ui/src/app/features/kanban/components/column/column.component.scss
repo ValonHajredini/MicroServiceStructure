@@ -17,6 +17,12 @@
   padding-bottom: 0.75rem;
   border-bottom: 2px solid #e2e8f0;
 
+  .header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
   h3 {
     margin: 0;
     font-size: 1rem;
@@ -33,6 +39,11 @@
       font-size: 0.875rem;
       color: #64748b;
       font-weight: 600;
+
+      &.exceeded {
+        color: var(--red-500);
+        font-weight: 700;
+      }
     }
   }
 }
@@ -43,6 +54,10 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  min-height: 100px;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -55,6 +70,17 @@
   &::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 3px;
+  }
+
+  // Drop zone highlight
+  &.cdk-drop-list-dragging {
+    background: rgba(59, 130, 246, 0.05);
+    border: 2px dashed var(--primary-color);
+  }
+
+  &.drag-over {
+    background: rgba(239, 68, 68, 0.05);
+    border: 2px dashed var(--red-500);
   }
 }
 
@@ -115,11 +141,68 @@
   }
 }
 
+// Task form dialog styles
+.task-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 0.5rem 0;
+
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    label {
+      font-weight: 600;
+      color: #334155;
+      font-size: 0.875rem;
+
+      .required {
+        color: #ef4444;
+      }
+    }
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .task-textarea,
+  .task-select,
+  .task-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.875rem;
+    transition: border-color 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    }
+  }
+
+  .task-textarea {
+    resize: vertical;
+    min-height: 100px;
+  }
+}
+
 // Mobile responsive
 @media (max-width: 768px) {
   .column-container {
     min-width: 100%;
     max-width: 100%;
     max-height: none;
+  }
+
+  .task-form .form-row {
+    grid-template-columns: 1fr;
   }
 }

@@ -1,6 +1,8 @@
 /* PrimeIcons */
 @import 'primeicons/primeicons.css';
 
+/* Note: PrimeNG v17+ uses providePrimeNG() in app.config.ts instead of CSS imports */
+
 // Global styles
 * {
   margin: 0;

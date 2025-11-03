@@ -1,0 +1,48 @@
+<div
+  class="task-card"
+  [class.loading]="isLoading()"
+  cdkDrag
+  [cdkDragData]="task()"
+  (click)="onTaskClick()"
+  (keydown)="onKeyDown($event)"
+  role="button"
+  [attr.aria-label]="'Task: ' + task().title"
+  [attr.aria-describedby]="'task-desc-' + task().id"
+  tabindex="0"
+>
+  <div class="task-card-header">
+    <h3 class="task-title">{{ task().title }}</h3>
+    @if (task().priority) {
+      <span class="priority-badge" [ngClass]="getPriorityClass()">
+        {{ task().priority }}
+      </span>
+    }
+  </div>
+
+  @if (task().description) {
+    <p class="task-description" [id]="'task-desc-' + task().id">
+      {{ truncateDescription(task().description) }}
+    </p>
+  }
+
+  <div class="task-footer">
+    @if (task().assigned_to) {
+      <div class="assignee">
+        <i class="pi pi-user"></i>
+        <span>{{ task().assigned_to }}</span>
+      </div>
+    }
+    @if (task().due_date) {
+      <div class="due-date">
+        <i class="pi pi-calendar"></i>
+        <span>{{ formatDueDate(task().due_date) }}</span>
+      </div>
+    }
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-overlay">
+      <i class="pi pi-spin pi-spinner"></i>
+    </div>
+  }
+</div>

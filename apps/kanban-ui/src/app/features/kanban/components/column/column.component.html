@@ -1,34 +1,50 @@
 <div class="column-container">
   <div class="column-header">
-    <h3>{{ column.title }}</h3>
-    <div class="column-meta">
-      <p-badge
-        [value]="column.tasks?.length || 0"
-        severity="info"
-      />
-      @if (column.wip_limit) {
-        <span class="wip-limit">
-          / {{ column.wip_limit }} WIP
-        </span>
-      }
+    <div class="header-left">
+      <h3>{{ column.title }}</h3>
+      <div class="column-meta">
+        <p-badge
+          [value]="column.tasks?.length || 0"
+          [severity]="isWipLimitExceeded ? 'danger' : 'info'"
+        />
+        @if (column.wip_limit) {
+          <span class="wip-limit" [class.exceeded]="isWipLimitExceeded">
+            / {{ column.wip_limit }} WIP
+          </span>
+        }
+      </div>
     </div>
+    <p-button
+      icon="pi pi-plus"
+      [text]="true"
+      [rounded]="true"
+      size="small"
+      (onClick)="openTaskDialog()"
+      pTooltip="Add task"
+    />
   </div>
 
-  <div class="tasks-container">
+  <div
+    class="tasks-container"
+    cdkDropList
+    [id]="dropListId"
+    [cdkDropListData]="column.tasks || []"
+    [cdkDropListConnectedTo]="connectedDropLists"
+    (cdkDropListDropped)="onDrop($event)"
+    [class.drag-over]="isWipLimitExceeded"
+  >
     @if (column.tasks && column.tasks.length > 0) {
-      @for (task of column.tasks; track task.id) {
-        <p-card [styleClass]="'task-card'">
-          <h4>{{ task.title }}</h4>
-          @if (task.description) {
-            <p class="task-description">{{ task.description }}</p>
-          }
-          @if (task.due_date) {
-            <div class="task-meta">
-              <i class="pi pi-calendar"></i>
-              <span>{{ formatDate(task.due_date) }}</span>
-            </div>
-          }
-        </p-card>
+      @for (task of column.tasks; track task.id; let idx = $index) {
+        <app-task-card
+          [task]="task"
+          [isLoading]="isTaskLoading(task.id)"
+          (taskClicked)="onTaskCardClick(task)"
+          (navigateUp)="onNavigateUp(idx)"
+          (navigateDown)="onNavigateDown(idx)"
+          (moveTaskUp)="onMoveTaskUp(idx)"
+          (moveTaskDown)="onMoveTaskDown(idx)"
+          [attr.data-task-index]="idx"
+        />
       }
     } @else {
       <div class="empty-column">
@@ -37,4 +53,80 @@
       </div>
     }
   </div>
+
+  <!-- Add Task Dialog -->
+  <p-dialog
+    header="Create New Task"
+    [(visible)]="showTaskDialog"
+    [modal]="true"
+    [style]="{width: '500px'}"
+    [draggable]="false"
+    [resizable]="false"
+  >
+    <div class="task-form">
+      <div class="form-field">
+        <label for="taskTitle">Title <span class="required">*</span></label>
+        <input
+          id="taskTitle"
+          type="text"
+          pInputText
+          [(ngModel)]="taskTitle"
+          placeholder="Enter task title"
+          [style]="{width: '100%'}"
+          autofocus
+        />
+      </div>
+
+      <div class="form-field">
+        <label for="taskDescription">Description</label>
+        <textarea
+          id="taskDescription"
+          [(ngModel)]="taskDescription"
+          placeholder="Enter task description"
+          rows="4"
+          class="task-textarea"
+        ></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label for="taskPriority">Priority</label>
+          <select
+            id="taskPriority"
+            [(ngModel)]="taskPriority"
+            class="task-select"
+          >
+            @for (option of priorityOptions; track option.value) {
+              <option [value]="option.value">{{ option.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="taskDueDate">Due Date</label>
+          <input
+            id="taskDueDate"
+            type="date"
+            [(ngModel)]="taskDueDateString"
+            class="task-input"
+          />
+        </div>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <p-button
+        label="Cancel"
+        severity="secondary"
+        [text]="true"
+        (onClick)="closeTaskDialog()"
+        [disabled]="savingTask()"
+      />
+      <p-button
+        label="Create Task"
+        (onClick)="saveTask()"
+        [loading]="savingTask()"
+      />
+    </ng-template>
+  </p-dialog>
 </div>

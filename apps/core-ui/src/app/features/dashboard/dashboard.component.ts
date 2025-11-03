@@ -120,16 +120,69 @@ export class DashboardComponent implements OnInit {
       const token = this.authService.getToken();
 
       if (service.name === 'notes') {
-        // Redirect to notes-ui with token for SSO
-        window.location.href = `http://localhost:4201?token=${token}`;
+        // Secure SSO: Open notes-ui SSO callback in new window and send token via postMessage
+        this.secureSSO('http://localhost:4201/auth/sso-callback', token);
       } else if (service.name === 'kanban') {
-        // Redirect to kanban-ui with token for SSO
-        window.location.href = `http://localhost:4202?token=${token}`;
+        // Secure SSO: Open kanban-ui SSO callback in new window and send token via postMessage
+        this.secureSSO('http://localhost:4202/auth/sso-callback', token);
       } else {
         // Fallback to Angular router for internal routes
         this.router.navigate([service.route]);
       }
     }
+  }
+
+  /**
+   * Secure SSO implementation using window.open() + postMessage
+   * Avoids exposing JWT token in URL (browser history, server logs)
+   *
+   * @param ssoCallbackUrl URL of the service's SSO callback page
+   * @param token JWT token to send securely
+   */
+  private secureSSO(ssoCallbackUrl: string, token: string | null): void {
+    if (!token) {
+      console.error('[SSO] No token available');
+      return;
+    }
+
+    // Open service in new window/tab
+    const serviceWindow = window.open(ssoCallbackUrl, '_blank');
+
+    if (!serviceWindow) {
+      console.error('[SSO] Failed to open service window. Please allow pop-ups.');
+      return;
+    }
+
+    // Listen for SSO_READY message from the service
+    const handleReady = (event: MessageEvent) => {
+      // Validate origin matches the service we're trying to open
+      const targetOrigin = new URL(ssoCallbackUrl).origin;
+
+      if (event.origin !== targetOrigin) {
+        console.warn('[SSO] Received message from unexpected origin:', event.origin);
+        return;
+      }
+
+      if (event.data?.type === 'SSO_READY') {
+        console.log('[SSO] Service ready, sending token via postMessage');
+
+        // Send token securely via postMessage
+        serviceWindow.postMessage(
+          { type: 'SSO_TOKEN', token },
+          targetOrigin
+        );
+
+        // Clean up event listener
+        window.removeEventListener('message', handleReady);
+      }
+    };
+
+    window.addEventListener('message', handleReady);
+
+    // Timeout cleanup after 15 seconds
+    setTimeout(() => {
+      window.removeEventListener('message', handleReady);
+    }, 15000);
   }
 
   requestAccess(service: ServiceViewModel): void {

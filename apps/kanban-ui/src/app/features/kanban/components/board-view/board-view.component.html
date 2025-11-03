@@ -33,8 +33,7 @@
           icon="pi pi-plus"
           severity="secondary"
           [outlined]="true"
-          [disabled]="true"
-          pTooltip="Coming in Story 4.8"
+          (onClick)="openColumnDialog()"
         />
       </div>
     </header>
@@ -43,7 +42,12 @@
     @if (board()!.columns && board()!.columns!.length > 0) {
       <div class="columns-container">
         @for (column of board()!.columns; track column.id) {
-          <app-column [column]="column" />
+          <app-column
+            [column]="column"
+            [connectedDropLists]="connectedDropLists()"
+            (taskMoved)="onTaskMoved($event)"
+            (taskClick)="onTaskClick($event)"
+          />
         }
       </div>
     } @else {
@@ -55,10 +59,62 @@
         <p-button
           label="Add Column"
           icon="pi pi-plus"
-          [disabled]="true"
-          pTooltip="Coming in Story 4.8"
+          (onClick)="openColumnDialog()"
         />
       </div>
     }
   }
+
+  <!-- Add Column Dialog -->
+  <p-dialog
+    header="Create New Column"
+    [(visible)]="showColumnDialog"
+    [modal]="true"
+    [style]="{width: '450px'}"
+    [draggable]="false"
+    [resizable]="false"
+  >
+    <div class="column-form">
+      <div class="form-field">
+        <label for="columnTitle">Column Title <span class="required">*</span></label>
+        <input
+          id="columnTitle"
+          type="text"
+          pInputText
+          [(ngModel)]="columnTitle"
+          placeholder="e.g., To Do, In Progress, Done"
+          [style]="{width: '100%'}"
+          autofocus
+        />
+      </div>
+
+      <div class="form-field">
+        <label for="wipLimit">WIP Limit (optional)</label>
+        <p-inputNumber
+          id="wipLimit"
+          [(ngModel)]="columnWipLimit"
+          [min]="1"
+          [max]="100"
+          placeholder="Maximum tasks in this column"
+          [style]="{width: '100%'}"
+        />
+        <small class="field-help">Work In Progress limit - restricts how many tasks can be in this column</small>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <p-button
+        label="Cancel"
+        severity="secondary"
+        [text]="true"
+        (onClick)="closeColumnDialog()"
+        [disabled]="savingColumn()"
+      />
+      <p-button
+        label="Create Column"
+        (onClick)="saveColumn()"
+        [loading]="savingColumn()"
+      />
+    </ng-template>
+  </p-dialog>
 </div>

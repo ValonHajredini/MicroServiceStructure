@@ -26,6 +26,7 @@ export interface Task {
   title: string;
   description?: string;
   position: number;
+  priority?: 'low' | 'medium' | 'high';
   assigned_to?: string;
   due_date?: string;
   created_at: string;

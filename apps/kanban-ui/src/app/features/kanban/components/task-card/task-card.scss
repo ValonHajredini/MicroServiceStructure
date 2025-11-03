@@ -1,0 +1,135 @@
+.task-card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  cursor: grab;
+  transition: all 0.2s ease;
+  position: relative;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary-color);
+  }
+
+  &:active,
+  &.cdk-drag-dragging {
+    cursor: grabbing;
+    opacity: 0.8;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  &:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+  }
+
+  &.loading {
+    pointer-events: none;
+    opacity: 0.6;
+  }
+}
+
+.task-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.task-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-color);
+  flex: 1;
+  line-height: 1.4;
+}
+
+.priority-badge {
+  font-size: 0.7rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.priority-low {
+  background: var(--green-100);
+  color: var(--green-700);
+}
+
+.priority-medium {
+  background: var(--yellow-100);
+  color: var(--yellow-700);
+}
+
+.priority-high {
+  background: var(--red-100);
+  color: var(--red-700);
+}
+
+.priority-none {
+  background: var(--surface-100);
+  color: var(--surface-600);
+}
+
+.task-description {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+  line-height: 1.5;
+}
+
+.task-footer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.8rem;
+  color: var(--text-color-secondary);
+}
+
+.assignee,
+.due-date {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  i {
+    font-size: 0.75rem;
+  }
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+
+  i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+  }
+}
+
+// CDK Drag Placeholder
+.cdk-drag-placeholder {
+  opacity: 0.4;
+  background: var(--surface-100);
+  border: 2px dashed var(--surface-border);
+}
+
+// CDK Drag Preview (while dragging)
+.cdk-drag-preview {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--primary-color);
+}

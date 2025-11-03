@@ -178,6 +178,10 @@ export class KanbanGateway
    * Emit task created event to board room
    */
   emitTaskCreated(boardId: string, tenantId: string, task: any): void {
+    if (!this.server) {
+      this.logger.warn('WebSocket server not initialized, skipping task:created event');
+      return;
+    }
     this.server.to(`board:${boardId}`).emit("task:created", {
       type: "task:created",
       data: task,
@@ -190,6 +194,10 @@ export class KanbanGateway
    * Emit task updated event to board room
    */
   emitTaskUpdated(boardId: string, tenantId: string, task: any): void {
+    if (!this.server) {
+      this.logger.warn('WebSocket server not initialized, skipping task:updated event');
+      return;
+    }
     this.server.to(`board:${boardId}`).emit("task:updated", {
       type: "task:updated",
       data: task,
@@ -209,6 +217,10 @@ export class KanbanGateway
     newColumnId: string,
     newPosition: number,
   ): void {
+    if (!this.server) {
+      this.logger.warn('WebSocket server not initialized, skipping task:moved event');
+      return;
+    }
     this.server.to(`board:${boardId}`).emit("task:moved", {
       type: "task:moved",
       data: {
@@ -226,6 +238,10 @@ export class KanbanGateway
    * Emit column added event to board room
    */
   emitColumnAdded(boardId: string, tenantId: string, column: any): void {
+    if (!this.server) {
+      this.logger.warn("WebSocket server not initialized - skipping column:added event");
+      return;
+    }
     this.server.to(`board:${boardId}`).emit("column:added", {
       type: "column:added",
       data: column,
@@ -238,6 +254,10 @@ export class KanbanGateway
    * Emit column reordered event to board room
    */
   emitColumnReordered(boardId: string, tenantId: string, columns: any[]): void {
+    if (!this.server) {
+      this.logger.warn('WebSocket server not initialized, skipping column:reordered event');
+      return;
+    }
     this.server.to(`board:${boardId}`).emit("column:reordered", {
       type: "column:reordered",
       data: columns,
@@ -255,6 +275,10 @@ export class KanbanGateway
     taskId: string,
     comment: any,
   ): void {
+    if (!this.server) {
+      this.logger.warn('WebSocket server not initialized, skipping comment:added event');
+      return;
+    }
     this.server.to(`board:${boardId}`).emit("comment:added", {
       type: "comment:added",
       data: {
